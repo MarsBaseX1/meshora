@@ -1,0 +1,101 @@
+{
+  "name": "meshora",
+  "productName": "Meshora",
+  "version": "1.0.0",
+  "description": "一键转换 · 预览即所得",
+  "author": {
+    "name": "marsbasex.com",
+    "url": "https://marsbasex.com"
+  },
+  "license": "MIT",
+  "copyright": "Copyright © 2026 marsbasex.com",
+  "homepage": "https://marsbasex.com",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite build && electron .",
+    "preview": "electron .",
+    "build:renderer": "vite build",
+    "build:win": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis zip --x64",
+    "build:win:nsis": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis --x64",
+    "build:win:zip": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win zip --x64",
+    "build:win:dir": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --x64 --dir",
+    "pack:win": "vite build && electron-packager . Meshora --platform=win32 --arch=x64 --out=release --overwrite --icon=assets/icon.ico --app-copyright=\"Copyright © 2026 marsbasex.com\""
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "assimpjs": "0.0.10",
+    "jszip": "^3.10.1",
+    "three": "^0.170.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "@electron/packager": "^18.3.6",
+    "vite": "^6.0.3"
+  },
+  "build": {
+    "appId": "com.marsbasex.meshora",
+    "productName": "Meshora",
+    "copyright": "Copyright © 2026 marsbasex.com",
+    "artifactName": "${productName}-Setup-${version}.${ext}",
+    "directories": {
+      "output": "release-build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "assets/icon.ico",
+      "assets/icon.png",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "samples",
+        "to": "samples"
+      }
+    ],
+    "asar": true,
+    "compression": "maximum",
+    "win": {
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
+      ],
+      "publisherName": "marsbasex.com",
+      "legalTrademarks": "Meshora — marsbasex.com",
+      "fileAssociations": [
+        { "ext": "obj", "name": "Wavefront OBJ", "description": "3D 模型", "icon": "assets/icon.ico" },
+        { "ext": "fbx", "name": "Autodesk FBX", "description": "3D 模型", "icon": "assets/icon.ico" },
+        { "ext": "gltf", "name": "glTF", "description": "3D 模型", "icon": "assets/icon.ico" },
+        { "ext": "glb", "name": "glTF Binary", "description": "3D 模型", "icon": "assets/icon.ico" },
+        { "ext": "stl", "name": "STL", "description": "3D 模型", "icon": "assets/icon.ico" },
+        { "ext": "ply", "name": "PLY", "description": "3D 模型", "icon": "assets/icon.ico" },
+        { "ext": "dae", "name": "Collada", "description": "3D 模型", "icon": "assets/icon.ico" }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Meshora",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "displayLanguageSelector": false,
+      "installerLanguages": ["zh_CN", "en_US"],
+      "language": "2052"
+    }
+  }
+}

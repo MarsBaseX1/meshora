@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src 'self' blob:;" />
+    <title>Meshora</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="titlebar" id="titlebar">
+        <div class="titlebar-drag">
+          <img class="brand-mark" src="./icon.png" alt="" />
+          <div class="brand-text">
+            <span class="wordmark">Meshora</span>
+            <span class="tagline">一键转换 · 预览即所得</span>
+          </div>
+        </div>
+        <div class="titlebar-actions">
+          <button class="ghost" id="btnAbout" type="button" title="关于">关于</button>
+        </div>
+        <div class="win-controls">
+          <button class="win-btn" id="btnMin" type="button" title="最小化" aria-label="最小化">
+            <svg viewBox="0 0 12 12"><rect x="1" y="5.25" width="10" height="1.5" rx="0.4" fill="currentColor"/></svg>
+          </button>
+          <button class="win-btn" id="btnMax" type="button" title="最大化" aria-label="最大化">
+            <svg viewBox="0 0 12 12" id="iconMax"><rect x="1.75" y="1.75" width="8.5" height="8.5" rx="0.8" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+          <button class="win-btn close" id="btnClose" type="button" title="关闭" aria-label="关闭">
+            <svg viewBox="0 0 12 12"><path d="M2.2 2.2 L9.8 9.8 M9.8 2.2 L2.2 9.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="shell">
+        <aside class="sidebar">
+          <div class="drop-card" id="dropCard">
+            <div class="drop-visual" aria-hidden="true">
+              <svg viewBox="0 0 64 64" class="drop-ico">
+                <defs>
+                  <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#E8A56A"/>
+                    <stop offset="1" stop-color="#C9784A"/>
+                  </linearGradient>
+                </defs>
+                <path d="M32 8 L52 20 L52 44 L32 56 L12 44 L12 20 Z" fill="none" stroke="url(#g1)" stroke-width="1.6"/>
+                <path d="M32 8 L32 32 L52 20 M32 32 L12 20 M32 32 L32 56" fill="none" stroke="url(#g1)" stroke-width="1.2" opacity="0.7"/>
+              </svg>
+            </div>
+            <p class="drop-title">拖放模型到此处</p>
+            <p class="drop-sub">支持 OBJ · FBX · GLTF · GLB · STL · PLY · DAE 等</p>
+            <button class="btn-secondary" id="btnOpen" type="button">选择文件</button>
+            <input id="fileInput" type="file" multiple hidden accept=".obj,.fbx,.gltf,.glb,.stl,.ply,.dae,.3ds,.3mf,.off,.x,.usdz,.usd,.blend,.x3d,.mtl,.bin,.png,.jpg,.jpeg,.webp" />
+          </div>
+
+          <div class="file-head">
+            <span>文件</span>
+            <span class="muted" id="fileCount">0</span>
+          </div>
+          <div class="file-list" id="fileList"></div>
+        </aside>
+
+        <main class="stage">
+          <div class="viewport-frame" id="viewportFrame">
+            <canvas id="view"></canvas>
+            <div class="empty-state" id="emptyState">
+              <div class="empty-orb">
+                <svg viewBox="0 0 120 120">
+                  <defs>
+                    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#E8A56A"/>
+                      <stop offset="1" stop-color="#C9784A"/>
+                    </linearGradient>
+                  </defs>
+                  <polygon points="60,12 96,33 96,75 60,96 24,75 24,33" fill="none" stroke="url(#g2)" stroke-width="1.4"/>
+                  <polygon points="60,12 96,75 24,75" fill="none" stroke="url(#g2)" stroke-width="0.8" opacity="0.55"/>
+                  <polygon points="24,33 96,33 60,96" fill="none" stroke="url(#g2)" stroke-width="0.8" opacity="0.4"/>
+                </svg>
+              </div>
+              <h1>Meshora</h1>
+              <p>将 3D 模型拖入窗口即可预览并转换。转换不改变模型几何。</p>
+            </div>
+            <div class="loading-veil" id="loadingVeil" hidden>
+              <div class="spinner"></div>
+              <p id="loadingText">正在解析模型…</p>
+            </div>
+            <div class="view-tools">
+              <button class="tool" id="btnFit" type="button">适应视图</button>
+              <button class="tool" id="btnGrid" type="button" data-on="1">网格</button>
+              <button class="tool" id="btnWire" type="button">线框</button>
+              <button class="tool" id="btnSpin" type="button">自动旋转</button>
+            </div>
+          </div>
+        </main>
+
+        <aside class="inspector">
+          <section class="panel">
+            <h2>导出格式</h2>
+            <div class="format-grid" id="formatGrid"></div>
+            <p class="hint" id="formatHint">GLB / GLTF 由 assimpjs 写出。OBJ / STL / PLY / DAE / 3MF 按导入场景原样写出顶点，不做重网格。</p>
+          </section>
+
+          <section class="panel grow">
+            <h2>模型信息</h2>
+            <dl class="stats" id="stats">
+              <div><dt>文件名</dt><dd id="stName">—</dd></div>
+              <div><dt>格式</dt><dd id="stFormat">—</dd></div>
+              <div><dt>大小</dt><dd id="stSize">—</dd></div>
+              <div><dt>顶点</dt><dd id="stVerts">—</dd></div>
+              <div><dt>面</dt><dd id="stFaces">—</dd></div>
+              <div><dt>材质</dt><dd id="stMats">—</dd></div>
+            </dl>
+            <p class="notice" id="triNotice" hidden>STL / 3MF 仅接受三角面。assimpjs 导入时会三角化多边形（无法关闭），顶点坐标保持不变。</p>
+          </section>
+
+          <div class="export-bar">
+            <button class="btn-primary" id="btnExport" type="button" disabled>导出</button>
+            <button class="btn-ghost" id="btnExportAs" type="button" disabled>导出到…</button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="toasts" id="toasts"></div>
+      <div class="overlay" id="aboutOverlay" hidden>
+        <div class="about-card" role="dialog" aria-labelledby="aboutTitle">
+          <img class="about-icon" src="./icon.png" alt="" />
+          <h2 id="aboutTitle">Meshora 1.0.0</h2>
+          <p class="about-author">作者 marsbasex.com</p>
+          <p class="about-tag">一键转换 · 预览即所得</p>
+          <p class="about-body">转换不改变模型几何。不会重网格、简化或缩放单位。导入由 assimpjs 完成；该库会三角化多边形并合并重合顶点（编译进 WASM，无法关闭）。顶点坐标保持不变。导出 STL / 3MF 需要三角面。</p>
+          <p class="about-copy">Copyright © 2026 marsbasex.com</p>
+          <button class="btn-secondary" id="btnAboutClose" type="button">关闭</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
