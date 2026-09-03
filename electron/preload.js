@@ -17,7 +17,11 @@ contextBridge.exposeInMainWorld('meshora', {
   openFiles: () => ipcRenderer.invoke('dialog:openFiles'),
   saveFile: (defaultName, ext) => ipcRenderer.invoke('dialog:saveFile', defaultName, ext),
   saveDir: () => ipcRenderer.invoke('dialog:saveDir'),
+  pickBlender: () => ipcRenderer.invoke('dialog:pickBlender'),
   writeFile: (filePath, data) => ipcRenderer.invoke('fs:writeFile', filePath, data),
   writeFiles: (dir, files) => ipcRenderer.invoke('fs:writeFiles', dir, files),
-  appInfo: () => ipcRenderer.invoke('app:info')
+  appInfo: () => ipcRenderer.invoke('app:info'),
+  blenderStatus: () => ipcRenderer.invoke('blender:status'),
+  blenderSetPath: (blenderPath) => ipcRenderer.invoke('blender:setPath', blenderPath),
+  blenderConvert: (payload) => ipcRenderer.invoke('blender:convert', payload)
 });

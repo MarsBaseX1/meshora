@@ -93,10 +93,8 @@ export async function convertFiles(files, format = 'glb2') {
 }
 
 export async function importScene(files) {
-  const [glbPack, jsonPack] = await Promise.all([
-    convertFiles(files, 'glb2'),
-    convertFiles(files, 'assjson')
-  ]);
+  const glbPack = await convertFiles(files, 'glb2');
+  const jsonPack = await convertFiles(files, 'assjson');
   const glb = glbPack[0];
   const jsonFile = jsonPack[0];
   let scene = null;

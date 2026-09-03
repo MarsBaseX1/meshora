@@ -7,6 +7,8 @@ import {
   formatLabel,
   formatSize,
   isPrimaryModel,
+  isMaxFile,
+  isBlendFile,
   replaceExt,
   COMPANION_EXTENSIONS
 } from './formats.js';
@@ -15,24 +17,31 @@ const api = window.meshora;
 const $ = (id) => document.getElementById(id);
 
 const state = {
-  files: [], // { id, name, size, data, companions: [], record }
+  files: [], // { id, name, size, data, path?, companions: [], kind? }
   activeId: null,
-  cache: new Map(), // id -> { glb, scene, stats, previewStats }
-  target: 'glb2',
+  cache: new Map(), // id -> { glb, scene, stats, previewStats, source? }
+  target: 'c4d-glb',
   grid: true,
   wire: false,
-  spin: false
+  spin: false,
+  blender: { found: false, path: null, statusText: '未找到' }
 };
 
 const viewport = new Viewport($('view'));
 let fileSeq = 0;
+
+const MAX_GUIDE =
+  '无法直接读取 .max（需 3ds Max）。请先在 3ds Max 中导出为 FBX，再导入本应用，并用「C4D · FBX / C4D · GLB」导出给 Cinema 4D。';
+
+const BLEND_GUIDE =
+  '未找到 Blender。请安装 Blender（https://www.blender.org）并在「设置」中指定 blender.exe，或将其加入 PATH。安装后即可预览 .blend 并导出给 C4D。';
 
 function toast(message, type = 'info') {
   const el = document.createElement('div');
   el.className = `toast ${type === 'error' ? 'error' : type === 'ok' ? 'ok' : ''}`;
   el.textContent = message;
   $('toasts').appendChild(el);
-  setTimeout(() => el.remove(), 3200);
+  setTimeout(() => el.remove(), 4200);
 }
 
 function setLoading(on, text) {
@@ -44,8 +53,35 @@ function showAbout(on) {
   $('aboutOverlay').hidden = !on;
 }
 
+function showSettings(on) {
+  $('settingsOverlay').hidden = !on;
+  if (on) refreshBlenderStatus();
+}
+
 function current() {
   return state.files.find((f) => f.id === state.activeId) || null;
+}
+
+async function refreshBlenderStatus() {
+  if (!api?.blenderStatus) {
+    state.blender = { found: false, path: null, statusText: '仅 Electron 可用' };
+  } else {
+    try {
+      state.blender = await api.blenderStatus();
+    } catch {
+      state.blender = { found: false, path: null, statusText: '未找到' };
+    }
+  }
+  const statusEl = $('blenderStatus');
+  const pathEl = $('blenderPath');
+  if (statusEl) {
+    statusEl.textContent = state.blender.found ? '已找到' : '未找到';
+    statusEl.className = `blender-status ${state.blender.found ? 'ok' : 'bad'}`;
+  }
+  if (pathEl) {
+    pathEl.textContent = state.blender.path || state.blender.configuredPath || '（未设置）';
+  }
+  updateHint();
 }
 
 function renderFormats() {
@@ -54,7 +90,7 @@ function renderFormats() {
   for (const fmt of EXPORT_FORMATS) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `fmt${state.target === fmt.id ? ' active' : ''}`;
+    btn.className = `fmt${state.target === fmt.id ? ' active' : ''}${fmt.c4dInterchange ? ' c4d' : ''}`;
     btn.textContent = fmt.label;
     btn.title = fmt.name;
     btn.addEventListener('click', () => {
@@ -70,6 +106,15 @@ function renderFormats() {
 function updateHint() {
   const fmt = EXPORT_FORMATS.find((f) => f.id === state.target);
   $('triNotice').hidden = !(fmt && fmt.needsTriangles);
+  const hint = $('formatHint');
+  if (!hint) return;
+  if (fmt?.c4dInterchange) {
+    hint.textContent =
+      'C4D · FBX / C4D · GLB 写出 Cinema 4D 可打开的互换文件（.fbx / .glb），不是原生 .c4d 工程。FBX 导出需要本机安装 Blender。';
+  } else {
+    hint.textContent =
+      'GLB / GLTF 由 assimpjs 写出。OBJ / STL / PLY / DAE / 3MF 按导入场景原样写出顶点，不做重网格。';
+  }
 }
 
 function renderFiles() {
@@ -78,12 +123,12 @@ function renderFiles() {
   list.innerHTML = '';
   for (const file of state.files) {
     const row = document.createElement('div');
-    row.className = `file-item${file.id === state.activeId ? ' active' : ''}`;
+    row.className = `file-item${file.id === state.activeId ? ' active' : ''}${file.blocked ? ' blocked' : ''}`;
     row.innerHTML = `
       <span class="chip">${formatLabel(file.name)}</span>
       <div class="file-meta">
         <div class="file-name"></div>
-        <div class="file-sub">${formatSize(file.size)}</div>
+        <div class="file-sub">${formatSize(file.size)}${file.blocked ? ' · 需先转 FBX' : ''}</div>
       </div>
       <button class="file-x" type="button" title="移除">×</button>
     `;
@@ -98,7 +143,7 @@ function renderFiles() {
     });
     list.appendChild(row);
   }
-  const has = state.files.length > 0;
+  const has = state.files.some((f) => !f.blocked);
   $('btnExport').disabled = !has;
   $('btnExportAs').disabled = !has;
 }
@@ -127,8 +172,15 @@ async function selectFile(id) {
     setStats(null, null);
     return;
   }
+  if (file.blocked) {
+    viewport.clear();
+    $('emptyState').classList.remove('hidden');
+    setStats(file, null);
+    toast(MAX_GUIDE, 'error');
+    return;
+  }
   try {
-    setLoading(true, '正在解析并生成预览…');
+    setLoading(true, isBlendFile(file.name) ? '正在通过 Blender 转换预览…' : '正在解析并生成预览…');
     const packed = await ensureCache(file);
     await viewport.loadGlb(packed.glb.data);
     $('emptyState').classList.add('hidden');
@@ -155,9 +207,49 @@ function payloadOf(file) {
   return [{ name: file.name, data: file.data }, ...extras];
 }
 
+async function importBlendViaBlender(file) {
+  if (!api?.blenderConvert) {
+    throw new Error(BLEND_GUIDE);
+  }
+  await refreshBlenderStatus();
+  if (!state.blender.found) {
+    throw new Error(BLEND_GUIDE);
+  }
+  const result = await api.blenderConvert({
+    inputPath: file.path || null,
+    inputData: file.path ? null : file.data,
+    inputName: file.name,
+    format: 'glb'
+  });
+  const glbData = new Uint8Array(result.data);
+  // Re-import GLB through assimpjs for scene JSON / stats when possible.
+  let scenePack = null;
+  try {
+    scenePack = await importScene([{ name: replaceExt(file.name, 'glb'), data: glbData }]);
+  } catch {
+    scenePack = null;
+  }
+  return {
+    glb: { name: replaceExt(file.name, 'glb'), data: glbData },
+    scene: scenePack?.scene || null,
+    stats: scenePack?.stats || { vertices: 0, faces: 0, materials: [], meshCount: 0, materialCount: 0 },
+    source: 'blender',
+    blendPath: file.path || null
+  };
+}
+
 async function ensureCache(file) {
   if (state.cache.has(file.id)) return state.cache.get(file.id);
+  if (isMaxFile(file.name)) {
+    throw new Error(MAX_GUIDE);
+  }
+  if (isBlendFile(file.name)) {
+    const packed = await importBlendViaBlender(file);
+    state.cache.set(file.id, packed);
+    return packed;
+  }
   const result = await importScene(payloadOf(file));
+  result.source = 'assimpjs';
   state.cache.set(file.id, result);
   return result;
 }
@@ -201,18 +293,23 @@ function ingestNamed(items) {
     return;
   }
   for (const item of source) {
+    const blocked = isMaxFile(item.name);
     const rec = {
       id: `f${++fileSeq}`,
       name: item.name,
-      size: item.size ?? item.data.byteLength,
-      data: item.data instanceof Uint8Array ? item.data : new Uint8Array(item.data),
-      companions: companions.map((c) => ({ name: c.name, data: c.data }))
+      size: item.size ?? item.data?.byteLength ?? 0,
+      data: item.data instanceof Uint8Array ? item.data : item.data ? new Uint8Array(item.data) : new Uint8Array(),
+      path: item.path || null,
+      companions: companions.map((c) => ({ name: c.name, data: c.data })),
+      blocked
     };
     state.files.push(rec);
     added.push(rec);
+    if (blocked) toast(MAX_GUIDE, 'error');
   }
   renderFiles();
-  if (added[0]) selectFile(added[0].id);
+  const firstOk = added.find((f) => !f.blocked) || added[0];
+  if (firstOk) selectFile(firstOk.id);
 }
 
 async function openNative() {
@@ -223,7 +320,8 @@ async function openNative() {
         ingestNamed(list.map((f) => ({
           name: f.name,
           size: f.size,
-          data: new Uint8Array(f.data)
+          data: new Uint8Array(f.data),
+          path: f.path || null
         })));
         return;
       }
@@ -239,10 +337,58 @@ function targetFormat() {
   return EXPORT_FORMATS.find((f) => f.id === state.target);
 }
 
+async function glbBytesFor(file) {
+  const packed = await ensureCache(file);
+  if (packed?.glb?.data) return packed.glb.data instanceof Uint8Array ? packed.glb.data : new Uint8Array(packed.glb.data);
+  throw new Error('没有可用的 GLB 预览数据');
+}
+
+async function exportC4dGlb(file) {
+  const data = await glbBytesFor(file);
+  return [{ name: replaceExt(file.name, 'glb'), data }];
+}
+
+async function exportC4dFbx(file) {
+  await refreshBlenderStatus();
+  if (!api?.blenderConvert || !state.blender.found) {
+    throw new Error('导出 C4D · FBX 需要 Blender。可改用 C4D · GLB，或在设置中配置 Blender。');
+  }
+  // Prefer original .blend → FBX; otherwise GLB → FBX round-trip.
+  if (isBlendFile(file.name)) {
+    const result = await api.blenderConvert({
+      inputPath: file.path || null,
+      inputData: file.path ? null : file.data,
+      inputName: file.name,
+      format: 'fbx'
+    });
+    return [{ name: replaceExt(file.name, 'fbx'), data: new Uint8Array(result.data) }];
+  }
+  const glb = await glbBytesFor(file);
+  const result = await api.blenderConvert({
+    inputData: glb,
+    inputName: replaceExt(file.name, 'glb'),
+    format: 'fbx'
+  });
+  return [{ name: replaceExt(file.name, 'fbx'), data: new Uint8Array(result.data) }];
+}
+
 async function buildExport(file) {
+  if (file.blocked || isMaxFile(file.name)) {
+    throw new Error(MAX_GUIDE);
+  }
   const fmt = targetFormat();
-  const base = file.name.replace(/\.[^.]+$/, '') || 'model';
+  if (fmt.via === 'c4d-glb') return exportC4dGlb(file);
+  if (fmt.via === 'c4d-fbx') return exportC4dFbx(file);
   if (fmt.via === 'assimpjs') {
+    if (isBlendFile(file.name)) {
+      // assimpjs cannot read modern .blend reliably; export from cached GLB via assimp.
+      const glb = await glbBytesFor(file);
+      const out = await exportAssimp([{ name: replaceExt(file.name, 'glb'), data: glb }], fmt.id);
+      return out.map((f, i) => ({
+        name: i === 0 ? replaceExt(file.name, fmt.ext) : (f.name.split(/[\\/]/).pop() || f.name),
+        data: f.data
+      }));
+    }
     const out = await exportAssimp(payloadOf(file), fmt.id);
     return out.map((f, i) => ({
       name: i === 0 ? replaceExt(file.name, fmt.ext) : (f.name.split(/[\\/]/).pop() || f.name),
@@ -250,9 +396,9 @@ async function buildExport(file) {
     }));
   }
   const packed = await ensureCache(file);
-  if (!packed.scene) throw new Error('无法读取场景数据');
-  const files = await exportById(fmt.id, packed.scene, base);
-  return files;
+  if (!packed.scene) throw new Error('无法读取场景数据（可尝试导出 GLB / C4D · GLB）');
+  const base = file.name.replace(/\.[^.]+$/, '') || 'model';
+  return exportById(fmt.id, packed.scene, base);
 }
 
 async function exportOne(file, destPath) {
@@ -283,17 +429,18 @@ function downloadBrowser(files) {
 }
 
 async function doExport({ pickPath } = {}) {
-  if (!state.files.length) return;
+  const exportable = state.files.filter((f) => !f.blocked);
+  if (!exportable.length) {
+    toast(MAX_GUIDE, 'error');
+    return;
+  }
   const fmt = targetFormat();
   try {
-    setLoading(true, '正在导出…');
-    if (state.files.length === 1) {
-      const file = state.files[0];
+    setLoading(true, fmt?.needsBlender ? '正在通过 Blender 导出…' : '正在导出…');
+    if (exportable.length === 1) {
+      const file = exportable[0];
       let dest = null;
-      if (pickPath && api?.saveFile) {
-        dest = await api.saveFile(replaceExt(file.name, fmt.ext), fmt.ext);
-        if (!dest) return;
-      } else if (api?.saveFile) {
+      if (api?.saveFile) {
         dest = await api.saveFile(replaceExt(file.name, fmt.ext), fmt.ext);
         if (!dest) return;
       }
@@ -305,22 +452,17 @@ async function doExport({ pickPath } = {}) {
         dir = await api.saveDir();
         if (!dir) return;
         const written = [];
-        for (const file of state.files) {
+        for (const file of exportable) {
           const files = await buildExport(file);
-          const mapped = files.map((f) => ({
-            name: f.name,
-            data: f.data
-          }));
-          await api.writeFiles(dir, mapped);
+          await api.writeFiles(dir, files.map((f) => ({ name: f.name, data: f.data })));
           written.push(file.name);
         }
         toast(`已批量导出 ${written.length} 个文件`, 'ok');
       } else {
-        for (const file of state.files) {
-          const files = await buildExport(file);
-          downloadBrowser(files);
+        for (const file of exportable) {
+          downloadBrowser(await buildExport(file));
         }
-        toast(`已开始下载 ${state.files.length} 个文件`, 'ok');
+        toast(`已开始下载 ${exportable.length} 个文件`, 'ok');
       }
     }
   } catch (err) {
@@ -332,6 +474,7 @@ async function doExport({ pickPath } = {}) {
 
 function bindUi() {
   renderFormats();
+  refreshBlenderStatus();
   $('btnOpen').addEventListener('click', openNative);
   $('fileInput').addEventListener('change', (e) => {
     ingestBrowserFiles(e.target.files);
@@ -343,6 +486,25 @@ function bindUi() {
   $('btnAboutClose').addEventListener('click', () => showAbout(false));
   $('aboutOverlay').addEventListener('click', (e) => {
     if (e.target === $('aboutOverlay')) showAbout(false);
+  });
+  $('btnSettings')?.addEventListener('click', () => showSettings(true));
+  $('btnSettingsClose')?.addEventListener('click', () => showSettings(false));
+  $('settingsOverlay')?.addEventListener('click', (e) => {
+    if (e.target === $('settingsOverlay')) showSettings(false);
+  });
+  $('btnPickBlender')?.addEventListener('click', async () => {
+    if (!api?.pickBlender) {
+      toast('请在桌面应用中选择 Blender 路径', 'error');
+      return;
+    }
+    const result = await api.pickBlender();
+    if (!result) return;
+    await refreshBlenderStatus();
+    toast(result.found ? `已找到 Blender：${result.resolved}` : '所选路径无效', result.found ? 'ok' : 'error');
+  });
+  $('btnRefreshBlender')?.addEventListener('click', async () => {
+    await refreshBlenderStatus();
+    toast(state.blender.found ? '已找到 Blender' : '未找到 Blender', state.blender.found ? 'ok' : 'error');
   });
   $('btnMin').addEventListener('click', () => api?.minimize?.());
   $('btnMax').addEventListener('click', () => api?.maximize?.());
@@ -371,8 +533,8 @@ function bindUi() {
   api?.onMenu?.('menu:open', openNative);
   api?.onMenu?.('menu:export', () => doExport({ pickPath: true }));
   api?.onMenu?.('menu:about', () => showAbout(true));
+  api?.onMenu?.('menu:settings', () => showSettings(true));
 
-  const frame = $('viewportFrame');
   const dropCard = $('dropCard');
 
   function onDrag(e) {
@@ -396,7 +558,10 @@ function bindUi() {
   });
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') showAbout(false);
+    if (e.key === 'Escape') {
+      showAbout(false);
+      showSettings(false);
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
       e.preventDefault();
       openNative();
@@ -404,6 +569,10 @@ function bindUi() {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
       e.preventDefault();
       doExport({ pickPath: true });
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+      e.preventDefault();
+      showSettings(true);
     }
     if (e.key.toLowerCase() === 'f' && !e.ctrlKey) viewport.fit();
   });

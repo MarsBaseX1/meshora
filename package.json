@@ -1,8 +1,8 @@
 {
   "name": "meshora",
   "productName": "Meshora",
-  "version": "1.0.0",
-  "description": "一键转换 · 预览即所得",
+  "version": "1.1.0",
+  "description": "一键转换 · 预览即所得 · C4D 互换导出",
   "author": {
     "name": "marsbasex.com",
     "url": "https://marsbasex.com"
@@ -16,10 +16,10 @@
     "start": "vite build && electron .",
     "preview": "electron .",
     "build:renderer": "vite build",
-    "build:win": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis zip --x64",
-    "build:win:nsis": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis --x64",
-    "build:win:zip": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win zip --x64",
-    "build:win:dir": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --x64 --dir",
+    "build:win": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis zip --x64 --publish never",
+    "build:win:nsis": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis --x64 --publish never",
+    "build:win:zip": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win zip --x64 --publish never",
+    "build:win:dir": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --x64 --dir --publish never",
     "pack:win": "vite build && electron-packager . Meshora --platform=win32 --arch=x64 --out=release --overwrite --icon=assets/icon.ico --app-copyright=\"Copyright © 2026 marsbasex.com\""
   },
   "dependencies": {},
@@ -46,12 +46,20 @@
       "electron/**/*",
       "assets/icon.ico",
       "assets/icon.png",
-      "package.json"
+      "package.json",
+      "scripts/blender_export.py"
     ],
     "extraResources": [
       {
         "from": "samples",
         "to": "samples"
+      },
+      {
+        "from": "scripts",
+        "to": "scripts",
+        "filter": [
+          "blender_export.py"
+        ]
       }
     ],
     "asar": true,
@@ -62,23 +70,74 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "publisherName": "marsbasex.com",
       "legalTrademarks": "Meshora — marsbasex.com",
       "fileAssociations": [
-        { "ext": "obj", "name": "Wavefront OBJ", "description": "3D 模型", "icon": "assets/icon.ico" },
-        { "ext": "fbx", "name": "Autodesk FBX", "description": "3D 模型", "icon": "assets/icon.ico" },
-        { "ext": "gltf", "name": "glTF", "description": "3D 模型", "icon": "assets/icon.ico" },
-        { "ext": "glb", "name": "glTF Binary", "description": "3D 模型", "icon": "assets/icon.ico" },
-        { "ext": "stl", "name": "STL", "description": "3D 模型", "icon": "assets/icon.ico" },
-        { "ext": "ply", "name": "PLY", "description": "3D 模型", "icon": "assets/icon.ico" },
-        { "ext": "dae", "name": "Collada", "description": "3D 模型", "icon": "assets/icon.ico" }
+        {
+          "ext": "obj",
+          "name": "Wavefront OBJ",
+          "description": "3D 模型",
+          "icon": "assets/icon.ico"
+        },
+        {
+          "ext": "fbx",
+          "name": "Autodesk FBX",
+          "description": "3D 模型",
+          "icon": "assets/icon.ico"
+        },
+        {
+          "ext": "gltf",
+          "name": "glTF",
+          "description": "3D 模型",
+          "icon": "assets/icon.ico"
+        },
+        {
+          "ext": "glb",
+          "name": "glTF Binary",
+          "description": "3D 模型",
+          "icon": "assets/icon.ico"
+        },
+        {
+          "ext": "stl",
+          "name": "STL",
+          "description": "3D 模型",
+          "icon": "assets/icon.ico"
+        },
+        {
+          "ext": "ply",
+          "name": "PLY",
+          "description": "3D 模型",
+          "icon": "assets/icon.ico"
+        },
+        {
+          "ext": "dae",
+          "name": "Collada",
+          "description": "3D 模型",
+          "icon": "assets/icon.ico"
+        },
+        {
+          "ext": "blend",
+          "name": "Blender",
+          "description": "Blender 场景",
+          "icon": "assets/icon.ico"
+        },
+        {
+          "ext": "max",
+          "name": "3ds Max (需导出 FBX)",
+          "description": "3ds Max 场景（Meshora 无法直接读取）",
+          "icon": "assets/icon.ico"
+        }
       ]
     },
     "nsis": {
@@ -94,7 +153,10 @@
       "installerHeaderIcon": "assets/icon.ico",
       "deleteAppDataOnUninstall": false,
       "displayLanguageSelector": false,
-      "installerLanguages": ["zh_CN", "en_US"],
+      "installerLanguages": [
+        "zh_CN",
+        "en_US"
+      ],
       "language": "2052"
     }
   }

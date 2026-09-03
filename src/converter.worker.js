@@ -19,7 +19,9 @@ function copyContent(content) {
   return copy;
 }
 
-self.onmessage = async (event) => {
+let chain = Promise.resolve();
+
+async function handle(event) {
   const { id, files, format } = event.data || {};
   try {
     const ajs = await getAssimp();
@@ -45,4 +47,11 @@ self.onmessage = async (event) => {
   } catch (err) {
     self.postMessage({ id, error: err && err.message ? err.message : String(err) });
   }
+}
+
+self.onmessage = (event) => {
+  chain = chain.then(() => handle(event)).catch((err) => {
+    const id = event && event.data && event.data.id;
+    self.postMessage({ id, error: err && err.message ? err.message : String(err) });
+  });
 };

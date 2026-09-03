@@ -2,17 +2,17 @@
 
 export const IMPORT_EXTENSIONS = [
   'obj', 'fbx', 'gltf', 'glb', 'stl', 'ply', 'dae', '3ds', '3mf', 'off', 'x',
-  'usdz', 'usd', 'usda', 'usdc', 'blend', 'x3d', 'bvh', 'lwo', 'lws', 'lxo',
+  'usdz', 'usd', 'usda', 'usdc', 'blend', 'max', 'x3d', 'bvh', 'lwo', 'lws', 'lxo',
   'md2', 'md3', 'md5mesh', 'md5anim', 'smd', 'ase', 'ifc', 'dxf', 'pmx',
   'b3d', 'ms3d', 'nff', 'raw', 'ter', 'ac', 'irrmesh', 'irr', 'mdl', 'hmp',
-  'ndo', 'q3o', 'q3s', 'ogex', 'gltf', 'glb', 'cob', 'scn', 'xgl', 'zgl',
-  'mesh.xml', 'xml', 'ply', 'mdc', 'md5camera', 'pk3', 'bsp', 'map', 'qc',
-  'smd', 'vta', 'm3d', 'assbin', 'gltf'
+  'ndo', 'q3o', 'q3s', 'ogex', 'cob', 'scn', 'xgl', 'zgl',
+  'mesh.xml', 'xml', 'mdc', 'md5camera', 'pk3', 'bsp', 'map', 'qc',
+  'vta', 'm3d', 'assbin'
 ];
 
 export const COMPANION_EXTENSIONS = [
   'mtl', 'bin', 'png', 'jpg', 'jpeg', 'webp', 'tga', 'bmp', 'gif', 'tif',
-  'tiff', 'ktx', 'basis', 'dds', 'hdr', 'exr', 'jpg', 'jpeg'
+  'tiff', 'ktx', 'basis', 'dds', 'hdr', 'exr'
 ];
 
 /** assimpjs native export ids. */
@@ -38,7 +38,34 @@ export const SCENE_EXPORT = [
   { id: '3mf', ext: '3mf', label: '3MF', name: '3D Manufacturing', via: 'scene', binary: true, needsTriangles: true }
 ];
 
+/**
+ * Cinema 4D–ready interchange exports.
+ * These write real .fbx / .glb that C4D can open — NOT native .c4d Melange projects.
+ */
+export const C4D_EXPORT = [
+  {
+    id: 'c4d-fbx',
+    ext: 'fbx',
+    label: 'C4D · FBX',
+    name: 'Cinema 4D 可用 FBX（互换格式，非原生 .c4d）',
+    via: 'c4d-fbx',
+    binary: true,
+    needsBlender: true,
+    c4dInterchange: true
+  },
+  {
+    id: 'c4d-glb',
+    ext: 'glb',
+    label: 'C4D · GLB',
+    name: 'Cinema 4D 可用 GLB（互换格式，非原生 .c4d）',
+    via: 'c4d-glb',
+    binary: true,
+    c4dInterchange: true
+  }
+];
+
 export const EXPORT_FORMATS = [
+  ...C4D_EXPORT,
   ...ASSIMP_EXPORT.filter((f) => !f.hidden),
   ...SCENE_EXPORT
 ];
@@ -46,8 +73,8 @@ export const EXPORT_FORMATS = [
 export const FORMAT_LABELS = {
   obj: 'OBJ', fbx: 'FBX', gltf: 'GLTF', glb: 'GLB', stl: 'STL', ply: 'PLY',
   dae: 'DAE', '3ds': '3DS', '3mf': '3MF', off: 'OFF', x: 'X', usdz: 'USDZ',
-  usd: 'USD', blend: 'BLEND', x3d: 'X3D', bvh: 'BVH', pmx: 'PMX', dxf: 'DXF',
-  ifc: 'IFC', md2: 'MD2', md5mesh: 'MD5', smd: 'SMD', ase: 'ASE'
+  usd: 'USD', blend: 'BLEND', max: 'MAX', x3d: 'X3D', bvh: 'BVH', pmx: 'PMX',
+  dxf: 'DXF', ifc: 'IFC', md2: 'MD2', md5mesh: 'MD5', smd: 'SMD', ase: 'ASE'
 };
 
 export function extOf(name) {
@@ -61,8 +88,16 @@ export function isPrimaryModel(name) {
   if (!ext) return false;
   if (COMPANION_EXTENSIONS.includes(ext) && !['glb', 'gltf'].includes(ext)) return false;
   return IMPORT_EXTENSIONS.includes(ext) || [
-    'obj', 'fbx', 'gltf', 'glb', 'stl', 'ply', 'dae', '3ds', '3mf', 'off', 'x'
+    'obj', 'fbx', 'gltf', 'glb', 'stl', 'ply', 'dae', '3ds', '3mf', 'off', 'x', 'blend', 'max'
   ].includes(ext);
+}
+
+export function isMaxFile(name) {
+  return extOf(name) === 'max';
+}
+
+export function isBlendFile(name) {
+  return extOf(name) === 'blend';
 }
 
 export function formatLabel(name) {
