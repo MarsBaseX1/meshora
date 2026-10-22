@@ -16,40 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Backfill submitted SignPath application status on existing releases (one-time)
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && contains(github.event.head_commit.message, '[backfill-signpath-submitted-status]')
-        shell: pwsh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $headers = @{
-            Authorization = "Bearer $env:GITHUB_TOKEN"
-            Accept = "application/vnd.github+json"
-            "X-GitHub-Api-Version" = "2022-11-28"
-          }
-          $repo = $env:GITHUB_REPOSITORY
-          $releaseTags = @("v1.0.0", "v1.1.0", "v1.1.1", "v1.1.2")
-          $oldStatus = "The SignPath Foundation application is being prepared and has not yet been submitted or approved."
-          $newStatus = "The SignPath Foundation application form has been submitted and is awaiting review. Acceptance has not been confirmed, and signing is not yet confirmed as active."
-
-          foreach ($tag in $releaseTags) {
-            $releaseUrl = "https://api.github.com/repos/$repo/releases/tags/$tag"
-            $release = Invoke-RestMethod -Method Get -Uri $releaseUrl -Headers $headers
-            if ($release.body.Contains($newStatus)) {
-              Write-Host "Application status already updated in $tag; skipping."
-              continue
-            }
-            if (-not $release.body.Contains($oldStatus)) {
-              throw "Expected old application status not found in release $tag; refusing to overwrite an unexpected release body."
-            }
-
-            $newBody = $release.body.Replace($oldStatus, $newStatus)
-            $payload = @{ body = $newBody } | ConvertTo-Json -Depth 5
-            $patchUrl = "https://api.github.com/repos/$repo/releases/$($release.id)"
-            Invoke-RestMethod -Method Patch -Uri $patchUrl -Headers $headers -ContentType "application/json" -Body $payload | Out-Null
-            Write-Host "Updated application status in $tag."
-          }
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
