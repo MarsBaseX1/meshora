@@ -51,6 +51,19 @@ jobs:
             throw "Do not hardcode the About version in src/index.html; read it from package.json."
           }
 
+          if ($package.build.win.signAndEditExecutable -ne $true) {
+            throw "Windows executable resource editing must be enabled so the custom Meshora icon is embedded."
+          }
+
+          $iconPath = "assets/icon.ico"
+          if (-not (Test-Path $iconPath)) {
+            throw "Generated Windows icon is missing: $iconPath"
+          }
+          $icon = [System.IO.File]::ReadAllBytes($iconPath)
+          if ($icon.Length -lt 1024 -or $icon[0] -ne 0 -or $icon[1] -ne 0 -or $icon[2] -ne 1 -or $icon[3] -ne 0) {
+            throw "Generated Windows icon is invalid or unexpectedly small."
+          }
+
           $bundles = Get-ChildItem -Path dist -Recurse -File -Filter *.js
           $embedded = $false
           foreach ($bundle in $bundles) {
