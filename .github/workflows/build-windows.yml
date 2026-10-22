@@ -210,6 +210,50 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Backfill SignPath policy on existing releases (one-time)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && contains(github.event.head_commit.message, '[backfill-signpath-release-notes]')
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $headers = @{
+            Authorization = "Bearer $env:GITHUB_TOKEN"
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $repo = $env:GITHUB_REPOSITORY
+          $releaseTags = @("v1.0.0", "v1.1.0", "v1.1.1", "v1.1.2")
+
+          foreach ($tag in $releaseTags) {
+            $releaseUrl = "https://api.github.com/repos/$repo/releases/tags/$tag"
+            $release = Invoke-RestMethod -Method Get -Uri $releaseUrl -Headers $headers
+
+            if ($release.body -match '(?im)^## Code signing policy\\s*$') {
+              Write-Host "Code signing policy already exists in $tag; skipping."
+              continue
+            }
+
+            $version = $tag.TrimStart('v')
+            $policy = @"
+## Code signing policy
+
+**Release status:** The Windows binaries attached to Meshora $version are **unsigned**. SignPath Foundation signing was not active when this release was published, and these files have not been signed retroactively.
+
+**Application status as of 2026-10-22:** The SignPath Foundation application is being prepared and has not yet been submitted or approved. This is not a claim that this release has been signed.
+
+**Attribution for releases that are actually signed only:**
+> Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+
+See the [Meshora Code Signing Policy](https://github.com/MarsBaseX1/meshora/blob/main/CODE_SIGNING.md).
+"@
+
+            $newBody = $release.body.TrimEnd() + "`n`n" + $policy.Trim()
+            $payload = @{ body = $newBody } | ConvertTo-Json -Depth 5
+            $patchUrl = "https://api.github.com/repos/$repo/releases/$($release.id)"
+            Invoke-RestMethod -Method Patch -Uri $patchUrl -Headers $headers -ContentType "application/json" -Body $payload | Out-Null
+            Write-Host "Updated $tag with an explicit unsigned status and code signing policy."
+          }
+
       - name: Prepare release notes
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && steps.tag.outputs.exists == 'false'
         shell: pwsh
@@ -218,15 +262,19 @@ jobs:
           APP_VERSION: ${{ steps.version.outputs.version }}
         run: |
           if ($env:SIGNPATH_ENABLED -eq 'true') {
-            $status = "The Windows installer for Meshora $env:APP_VERSION was signed by SignPath. Each signing request is subject to manual approval."
+            $status = "**Release status:** The Windows installer for Meshora $env:APP_VERSION has been signed by SignPath, and the release workflow verified its Authenticode signature as valid. Each signing request is subject to manual approval."
+            $attribution = "> Free code signing provided by SignPath.io, certificate by SignPath Foundation."
           } else {
-            $status = "The Windows installer for Meshora $env:APP_VERSION is unsigned. SignPath Foundation signing is not yet configured or enabled for this release."
+            $status = "**Release status:** The Windows installer for Meshora $env:APP_VERSION is **unsigned**. SignPath Foundation signing is not active for this release; do not interpret the attribution below as evidence that this installer is signed."
+            $attribution = "**Attribution for releases that are actually signed only:**`n> Free code signing provided by SignPath.io, certificate by SignPath Foundation."
           }
 
           @"
           ## Code signing policy
 
           $status
+
+          $attribution
 
           See the [Meshora Code Signing Policy](https://github.com/MarsBaseX1/meshora/blob/main/CODE_SIGNING.md).
           "@ | Set-Content -Path release-notes.md -Encoding utf8
