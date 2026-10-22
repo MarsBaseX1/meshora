@@ -2,7 +2,9 @@
   <img src="assets/meshora-brand.svg" width="88" alt="Meshora brand mark" />
   <h1>Meshora</h1>
   <p><strong>一键转换 · 预览即所得</strong></p>
+  <p><em>Convert in One Click · Preview What You Get</em></p>
   <p>一款专注于 3D 模型格式互通的 Windows 桌面工具。拖入模型、实时预览、检查网格信息，再导出为常见格式。</p>
+  <p>A Windows desktop tool for 3D model format conversion. Import models, preview them in real time, inspect mesh information, and export to common formats.</p>
   <p>
     <a href="https://github.com/MarsBaseX1/meshora/releases/latest"><img src="https://img.shields.io/github/v/release/MarsBaseX1/meshora?style=flat-square&label=latest%20release" alt="Latest release" /></a>
     <a href="https://github.com/MarsBaseX1/meshora/releases"><img src="https://img.shields.io/github/downloads/MarsBaseX1/meshora/total?style=flat-square&label=downloads" alt="GitHub downloads" /></a>
@@ -23,11 +25,23 @@
 
 ---
 
-## Meshora 是什么？
+## 项目介绍 / Project Overview
 
-Meshora 帮你把分散在不同 3D 工具和文件格式之间的模型工作流，整理成一个简单的桌面流程：**导入 → 预览 → 检查 → 导出**。
+### 中文介绍
 
-它适合需要快速查看模型、确认基础网格信息、在常见格式之间传递资产的设计师、开发者和 3D 内容创作者。Meshora 专注于格式转换与预览，不试图替代 Blender、Cinema 4D 或专业网格编辑软件。
+Meshora 是一款面向 Windows 的开源 3D 模型格式转换工具，帮助设计师、开发者和 3D 内容创作者更轻松地查看、检查和传递模型资产。通过简洁的桌面工作流，你可以导入模型、实时预览场景、查看基础网格信息，并导出为常见的 3D 文件格式。
+
+Meshora 专注于**格式互通、快速预览与资产交接**，不试图替代 Blender、Cinema 4D 或专业网格编辑软件。项目采用 MIT 开源许可证，源码、构建流程与版本发布均公开在 GitHub 上。
+
+**核心流程：导入 → 预览 → 检查 → 导出。**
+
+### English Overview
+
+Meshora is an open-source Windows desktop application for converting 3D model files between common formats. It helps designers, developers, and 3D creators quickly preview models, inspect basic mesh information, and move 3D assets between different tools and workflows.
+
+Meshora focuses on **format interoperability, fast previewing, and asset handoff** rather than replacing professional modeling or mesh-editing software such as Blender or Cinema 4D. The project is released under the MIT License, with its source code, build workflow, and versioned releases publicly available on GitHub.
+
+**Core workflow: Import → Preview → Inspect → Export.**
 
 ## 核心工作流
 
@@ -162,9 +176,13 @@ npm run build:win:nsis
 
 ## Code signing policy（代码签名政策）
 
-Meshora 正在准备接入 SignPath Foundation。**在项目获批、签名配置完成，并且对应发布页明确标注签名状态之前，Windows 下载均应视为未签名。**
+**申请状态 / Application status (2026-10-22):** SignPath Foundation application submitted; awaiting review. Acceptance has not been confirmed, and signing is not yet confirmed as active. / SignPath Foundation 申请已提交，正在等待审核；尚未确认获批或启用签名。
 
-获批并启用后，签名安装包将使用以下署名：
+**所有现有 Windows 下载均应视为未签名。** 只有在项目获批、签名配置完成、签名请求获批，并验证对应安装包的 Authenticode 签名有效后，才能将该版本标记为已签名。
+
+**All current Windows downloads must be treated as unsigned.** A release may be labelled signed only after the project is accepted, signing is configured, the signing request is approved, and the installer's Authenticode signature is verified as valid.
+
+获批并启用后，签名安装包将使用以下署名 / Once signing is active, signed installers will use this attribution:
 
 > Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
