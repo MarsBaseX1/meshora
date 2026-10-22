@@ -235,17 +235,17 @@ jobs:
 
             $version = $tag.TrimStart('v')
             $policy = @"
-## Code signing policy
+          ## Code signing policy
 
-**Release status:** The Windows binaries attached to Meshora $version are **unsigned**. SignPath Foundation signing was not active when this release was published, and these files have not been signed retroactively.
+          **Release status:** The Windows binaries attached to Meshora $version are **unsigned**. SignPath Foundation signing was not active when this release was published, and these files have not been signed retroactively.
 
-**Application status as of 2026-10-22:** The SignPath Foundation application is being prepared and has not yet been submitted or approved. This is not a claim that this release has been signed.
+          **Application status as of 2026-10-22:** The SignPath Foundation application is being prepared and has not yet been submitted or approved. This is not a claim that this release has been signed.
 
-**Attribution for releases that are actually signed only:**
-> Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+          **Attribution for releases that are actually signed only:**
+          > Free code signing provided by SignPath.io, certificate by SignPath Foundation.
 
-See the [Meshora Code Signing Policy](https://github.com/MarsBaseX1/meshora/blob/main/CODE_SIGNING.md).
-"@
+          See the [Meshora Code Signing Policy](https://github.com/MarsBaseX1/meshora/blob/main/CODE_SIGNING.md).
+          "@
 
             $newBody = $release.body.TrimEnd() + "`n`n" + $policy.Trim()
             $payload = @{ body = $newBody } | ConvertTo-Json -Depth 5
