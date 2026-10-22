@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420" fill="none">
   <title>Meshora mesh-focused conversion illustration</title>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="720" y2="420"><stop stop-color="#171B22"/><stop offset="1" stop-color="#0D1015"/></linearGradient>
-    <linearGradient id="meshline" x1="130" y1="50" x2="380" y2="345"><stop stop-color="#F1C28F"/><stop offset=".55" stop-color="#D9844F"/><stop offset="1" stop-color="#8E5535"/></linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="720" y2="420" gradientUnits="userSpaceOnUse"><stop stop-color="#171B22"/><stop offset="1" stop-color="#0D1015"/></linearGradient>
+    <linearGradient id="meshline" x1="130" y1="50" x2="380" y2="345" gradientUnits="userSpaceOnUse"><stop stop-color="#F1C28F"/><stop offset=".55" stop-color="#D9844F"/><stop offset="1" stop-color="#8E5535"/></linearGradient>
     <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#AEB8C7" stroke-opacity=".06"/></pattern>
   </defs>
   <rect width="720" height="420" rx="20" fill="url(#bg)"/>
