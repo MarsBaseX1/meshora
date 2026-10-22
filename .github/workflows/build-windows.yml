@@ -25,6 +25,12 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps || npm install
 
+      - name: Install icon generation tools
+        run: npm install --no-save --package-lock=false sharp png-to-ico
+
+      - name: Generate Meshora brand icons
+        run: npm run icons:generate
+
       - name: Build NSIS installer
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -33,14 +39,18 @@ jobs:
       - name: Stage installer
         shell: pwsh
         run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           New-Item -ItemType Directory -Force -Path release | Out-Null
+
           $exe = Get-ChildItem -Path release-build -Recurse -Filter *.exe | Select-Object -First 1
-          if ($exe) {
-            Copy-Item $exe.FullName release/Meshora-Setup-1.0.0.exe -Force
+          if (-not $exe) {
+            throw "Windows installer was not produced."
           }
+          Copy-Item $exe.FullName "release/Meshora-Setup-$version.exe" -Force
+
           $zip = Get-ChildItem -Path release-build -Recurse -Filter *.zip | Select-Object -First 1
           if ($zip) {
-            Copy-Item $zip.FullName release/Meshora-1.0.0-win32-x64.zip -Force
+            Copy-Item $zip.FullName "release/Meshora-$version-win32-x64.zip" -Force
           }
 
       - name: Upload artifacts
@@ -48,7 +58,7 @@ jobs:
         with:
           name: meshora-windows
           path: |
-            release/Meshora-Setup-1.0.0.exe
+            release/*
             release-build/**
 
       - name: Release on tag
@@ -56,6 +66,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/Meshora-Setup-1.0.0.exe
+            release/Meshora-Setup-*.exe
             release-build/*.exe
             release-build/*.zip
