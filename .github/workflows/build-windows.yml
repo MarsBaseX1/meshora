@@ -10,6 +10,7 @@ jobs:
   windows:
     runs-on: windows-latest
     permissions:
+      actions: read
       contents: write
     steps:
       - name: Checkout
@@ -94,12 +95,6 @@ jobs:
             Copy-Item $zip.FullName "release/Meshora-$version-win32-x64.zip" -Force
           }
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: meshora-windows
-          path: release/*
-
       - name: Read release version
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         id: version
@@ -128,6 +123,114 @@ jobs:
             Write-Host "Release tag $tag is missing; this main-branch build can publish it."
           }
 
+      - name: Check SignPath configuration
+        id: signpath-config
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && steps.tag.outputs.exists == 'false'
+        shell: pwsh
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          SIGNPATH_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+        run: |
+          $required = @(
+            'SIGNPATH_API_TOKEN',
+            'SIGNPATH_ORGANIZATION_ID',
+            'SIGNPATH_PROJECT_SLUG',
+            'SIGNPATH_SIGNING_POLICY_SLUG',
+            'SIGNPATH_ARTIFACT_CONFIGURATION_SLUG'
+          )
+          $missing = @($required | Where-Object {
+            [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_))
+          })
+
+          if ($missing.Count -eq 0) {
+            "enabled=true" >> $env:GITHUB_OUTPUT
+            Write-Host "SignPath is configured. The release will wait for an approved signing request."
+          } else {
+            "enabled=false" >> $env:GITHUB_OUTPUT
+            Write-Warning ("SignPath is not fully configured; this release will remain unsigned. Missing settings: " + ($missing -join ', '))
+          }
+
+      - name: Upload unsigned installer for SignPath
+        id: upload-signpath-installer
+        if: steps.signpath-config.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: meshora-installer-unsigned-${{ steps.version.outputs.version }}
+          path: release/Meshora-Setup-${{ steps.version.outputs.version }}.exe
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Submit Windows installer to SignPath
+        id: signpath
+        if: steps.signpath-config.outputs.enabled == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-signpath-installer.outputs.artifact-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signed-installer
+          skip-decompress: true
+
+      - name: Verify and stage signed installer
+        if: steps.signpath-config.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $signed = Get-ChildItem -Path signed-installer -File -Filter *.exe | Select-Object -First 1
+          if (-not $signed) {
+            throw "SignPath completed without returning a signed EXE installer."
+          }
+
+          $signature = Get-AuthenticodeSignature $signed.FullName
+          if ($signature.Status -ne 'Valid') {
+            throw "The SignPath output does not have a valid Authenticode signature: $($signature.Status) $($signature.StatusMessage)"
+          }
+
+          $destination = "release/Meshora-Setup-$env:APP_VERSION.exe"
+          Copy-Item $signed.FullName $destination -Force
+          Write-Host "Verified signed installer: $destination"
+          Write-Host "Signer: $($signature.SignerCertificate.Subject)"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshora-windows
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Prepare release notes
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && steps.tag.outputs.exists == 'false'
+        shell: pwsh
+        env:
+          SIGNPATH_ENABLED: ${{ steps.signpath-config.outputs.enabled }}
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if ($env:SIGNPATH_ENABLED -eq 'true') {
+            $status = "The Windows installer for Meshora $env:APP_VERSION was signed by SignPath. Each signing request is subject to manual approval."
+          } else {
+            $status = "The Windows installer for Meshora $env:APP_VERSION is unsigned. SignPath Foundation signing is not yet configured or enabled for this release."
+          }
+
+          @"
+          ## Code signing policy
+
+          $status
+
+          See the [Meshora Code Signing Policy](https://github.com/MarsBaseX1/meshora/blob/main/CODE_SIGNING.md).
+          "@ | Set-Content -Path release-notes.md -Encoding utf8
+
       - name: Publish versioned GitHub release
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && steps.tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
@@ -135,5 +238,6 @@ jobs:
           tag_name: v${{ steps.version.outputs.version }}
           target_commitish: ${{ github.sha }}
           name: Meshora v${{ steps.version.outputs.version }}
+          body_path: release-notes.md
           generate_release_notes: true
           files: release/*
