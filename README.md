@@ -15,7 +15,7 @@ npm install --no-save --package-lock=false sharp png-to-ico
 npm run icons:generate
 ```
 
-- 版本 1.1.0
+- 版本 1.1.1
 - 作者 / 版权 marsbasex.com
 - Copyright © 2026 marsbasex.com
 
@@ -70,7 +70,7 @@ ELECTRON_START_URL=http://localhost:5173 npx electron .
 npm run build:win:nsis
 ```
 
-产物在 `release-build/`，再复制为 `release/Meshora-Setup-1.1.0.exe`。
+产物在 `release-build/`，再复制为 `release/Meshora-Setup-1.1.1.exe`。
 
 也可以生成 zip：
 
