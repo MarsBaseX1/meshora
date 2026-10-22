@@ -2,7 +2,7 @@
 
 ## Current status
 
-Meshora is preparing to integrate SignPath Foundation code signing. The project has not confirmed acceptance by SignPath Foundation or completed the SignPath project configuration yet. **Until a release explicitly identifies a signed installer and the installer has a valid Authenticode signature, treat the Windows downloads as unsigned.**
+**Application status (2026-10-22):** The SignPath Foundation application form has been submitted and is awaiting review. Acceptance has not been confirmed, and SignPath signing is not yet confirmed as active. Submitting the application does not mean the project has been accepted or that any download is signed. **Until a release explicitly identifies a signed installer and the installer has a valid Authenticode signature, treat the Windows downloads as unsigned.**
 
 The GitHub Actions integration is designed to submit the Windows NSIS installer built by the repository's GitHub-hosted release workflow. Once SignPath is configured, the workflow waits for the signing request to be completed and verifies the returned installer's Authenticode signature before publishing the release. Every release signing request remains subject to manual approval.
 
