@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="330" viewBox="0 0 1200 330" fill="none">
+  <title>Meshora workflow: import, preview, export</title>
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1B2028"/><stop offset="1" stop-color="#111419"/></linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#F2BE89"/><stop offset="1" stop-color="#C9784A"/></linearGradient>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" stroke="#9EA9B7" stroke-opacity=".08"/></pattern>
+  </defs>
+  <rect width="1200" height="330" rx="20" fill="#0D1015"/>
+  <rect width="1200" height="330" rx="20" fill="url(#grid)"/>
+  <g>
+    <rect x="24" y="28" width="342" height="274" rx="16" fill="url(#panel)" stroke="#C9784A" stroke-opacity=".32"/>
+    <rect x="429" y="28" width="342" height="274" rx="16" fill="url(#panel)" stroke="#C9784A" stroke-opacity=".55"/>
+    <rect x="834" y="28" width="342" height="274" rx="16" fill="url(#panel)" stroke="#C9784A" stroke-opacity=".32"/>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="48" y="62" font-size="12" font-weight="700" letter-spacing="2" fill="#D58B5C">01 / IMPORT</text>
+    <text x="453" y="62" font-size="12" font-weight="700" letter-spacing="2" fill="#D58B5C">02 / PREVIEW</text>
+    <text x="858" y="62" font-size="12" font-weight="700" letter-spacing="2" fill="#D58B5C">03 / EXPORT</text>
+    <text x="48" y="95" font-size="23" font-weight="700" fill="#F4EEE6">导入模型</text>
+    <text x="453" y="95" font-size="23" font-weight="700" fill="#F4EEE6">预览与检查</text>
+    <text x="858" y="95" font-size="23" font-weight="700" fill="#F4EEE6">选择格式导出</text>
+    <text x="48" y="122" font-size="13" fill="#9DA6B2">拖放文件，支持一次选择多个模型</text>
+    <text x="453" y="122" font-size="13" fill="#9DA6B2">旋转、平移、缩放、适应视图</text>
+    <text x="858" y="122" font-size="13" fill="#9DA6B2">原样写出场景几何数据</text>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle">
+    <g transform="translate(48 151)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">OBJ</text></g>
+    <g transform="translate(140 151)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">FBX</text></g>
+    <g transform="translate(232 151)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">GLB</text></g>
+    <g transform="translate(48 197)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">STL</text></g>
+    <g transform="translate(140 197)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">PLY</text></g>
+    <g transform="translate(232 197)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">DAE</text></g>
+  </g>
+  <g transform="translate(600 202)" stroke-linejoin="round">
+    <path d="M0 -61L53 -31V31L0 61L-53 31V-31Z" stroke="url(#accent)" stroke-width="2.4"/>
+    <path d="M0 -61V0M-53 -31L0 0L53 -31M-53 31L0 0L53 31M0 0V61" stroke="#B6C0CC" stroke-opacity=".65" stroke-width="1.5"/>
+    <path d="M-53 -10L0 21L53 -10M-53 10L0 41L53 10M-28 -46V45M28 -46V45" stroke="#C9784A" stroke-opacity=".5" stroke-width="1"/>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#B8C0CA">
+    <text x="453" y="281">文件信息 · 顶点 · 面 · 材质</text>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" text-anchor="middle">
+    <g transform="translate(858 151)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">GLB</text></g>
+    <g transform="translate(950 151)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">OBJ</text></g>
+    <g transform="translate(1042 151)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">STL</text></g>
+    <g transform="translate(858 197)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">PLY</text></g>
+    <g transform="translate(950 197)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">DAE</text></g>
+    <g transform="translate(1042 197)"><rect width="82" height="36" rx="8" fill="#27221F" stroke="#C9784A" stroke-opacity=".45"/><text x="41" y="23" fill="#F4EEE6">3MF</text></g>
+  </g>
+  <g stroke="#D58B5C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M379 165H410M401 156L410 165L401 174"/>
+    <path d="M784 165H815M806 156L815 165L806 174"/>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#8D969F">
+    <text x="858" y="266">C4D 互换：GLB / FBX*</text>
+    <text x="858" y="285">* FBX 导出需本机安装 Blender</text>
+  </g>
+</svg>

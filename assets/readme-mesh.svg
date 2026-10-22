@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420" fill="none">
+  <title>Meshora mesh-focused conversion illustration</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="720" y2="420" gradientUnits="userSpaceOnUse"><stop stop-color="#171B22"/><stop offset="1" stop-color="#0D1015"/></linearGradient>
+    <linearGradient id="meshline" x1="130" y1="50" x2="380" y2="345" gradientUnits="userSpaceOnUse"><stop stop-color="#F1C28F"/><stop offset=".55" stop-color="#D9844F"/><stop offset="1" stop-color="#8E5535"/></linearGradient>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" stroke="#AEB8C7" stroke-opacity=".06"/></pattern>
+  </defs>
+  <rect width="720" height="420" rx="20" fill="url(#bg)"/>
+  <rect width="720" height="420" rx="20" fill="url(#grid)"/>
+  <g transform="translate(228 198)" stroke-linejoin="round">
+    <path d="M0 -126L108 -64L108 61L0 123L-108 61V-64Z" stroke="url(#meshline)" stroke-width="2.4"/>
+    <path d="M0 -126V-1M-108 -64L0 -1L108 -64M-108 61L0 -1L108 61M0 -1V123" stroke="#C6D0DD" stroke-opacity=".72" stroke-width="1.5"/>
+    <path d="M-108 -22L-54 9L0 -22L54 9L108 -22M-108 20L-54 51L0 20L54 51L108 20" stroke="#D9844F" stroke-opacity=".68" stroke-width="1.2"/>
+    <path d="M-72 -85V82M-36 -105V103M36 -105V103M72 -85V82" stroke="#C6D0DD" stroke-opacity=".3" stroke-width="1"/>
+    <path d="M-108 -64L-36 103M108 -64L36 103M-72 -85L54 51M72 -85L-54 51" stroke="#F2BE89" stroke-opacity=".55" stroke-width="1"/>
+    <g fill="#F1BC86" stroke="#101318" stroke-width="2">
+      <circle cx="0" cy="-126" r="4"/><circle cx="-108" cy="-64" r="3.5"/><circle cx="108" cy="-64" r="3.5"/><circle cx="-108" cy="61" r="3.5"/><circle cx="108" cy="61" r="3.5"/><circle cx="0" cy="123" r="4"/><circle cx="0" cy="-1" r="4"/>
+    </g>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="420" y="92" font-size="12" font-weight="700" letter-spacing="1.6" fill="#D58B5C">GEOMETRY-FIRST</text>
+    <text x="420" y="126" font-size="22" font-weight="700" fill="#F4EEE6">专注格式互通</text>
+    <g font-size="15" fill="#D9DDE3">
+      <circle cx="430" cy="169" r="9" fill="#26382F" stroke="#7CB89A" stroke-opacity=".9"/><path d="M426 169l3 3 5-6" stroke="#9CD0B1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="450" y="174">不做重网格</text>
+      <circle cx="430" cy="213" r="9" fill="#26382F" stroke="#7CB89A" stroke-opacity=".9"/><path d="M426 213l3 3 5-6" stroke="#9CD0B1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="450" y="218">不做网格简化</text>
+      <circle cx="430" cy="257" r="9" fill="#26382F" stroke="#7CB89A" stroke-opacity=".9"/><path d="M426 257l3 3 5-6" stroke="#9CD0B1" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="450" y="262">不主动缩放单位</text>
+    </g>
+    <path d="M420 291H672" stroke="#AEB8C7" stroke-opacity=".15"/>
+    <text x="420" y="315" font-size="12" fill="#9DA6B2">导入器仍可能三角化多边形</text>
+    <text x="420" y="334" font-size="12" fill="#9DA6B2">并合并重合顶点，详见格式说明</text>
+  </g>
+  <g fill="#E8A56A" opacity=".7"><circle cx="77" cy="80" r="2"/><circle cx="330" cy="54" r="1.5"/><circle cx="354" cy="354" r="2"/><circle cx="92" cy="330" r="1.5"/></g>
+</svg>
