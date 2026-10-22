@@ -160,6 +160,20 @@ npm run build:win:nsis
 - **格式读取与转换：** assimpjs / WebAssembly
 - **可选格式桥接：** Blender CLI
 
+## Code signing policy（代码签名政策）
+
+Meshora 正在准备接入 SignPath Foundation。**在项目获批、签名配置完成，并且对应发布页明确标注签名状态之前，Windows 下载均应视为未签名。**
+
+获批并启用后，签名安装包将使用以下署名：
+
+> Free code signing provided by SignPath.io, certificate by SignPath Foundation.
+
+- [查看完整 Code signing policy](CODE_SIGNING.md)
+- [MIT License](LICENSE)
+- [SignPath Foundation 申请与资格说明](https://signpath.org/)
+
+当前自动化流程计划先签名 Windows 安装程序；便携 ZIP 暂不纳入此轮签名范围。SignPath Foundation 对每次发布的签名请求仍要求人工审批。
+
 ## 反馈与参与
 
 遇到无法导入的模型、转换异常或有功能建议？欢迎通过 [GitHub Issues](https://github.com/MarsBaseX1/meshora/issues) 提交问题，并尽可能附上源文件格式、目标格式与复现步骤。
