@@ -7,11 +7,13 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Keep normal builds read-only. Only the tag-release job needs write access.
+permissions:
+  contents: read
+
 jobs:
   windows:
     runs-on: windows-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,37 +27,67 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps || npm install
 
-      - name: Build NSIS installer
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npm run build:win:nsis
-
-      - name: Stage installer
+      - name: Read package version
+        id: version
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path release | Out-Null
-          $exe = Get-ChildItem -Path release-build -Recurse -Filter *.exe | Select-Object -First 1
-          if ($exe) {
-            Copy-Item $exe.FullName release/Meshora-Setup-1.0.0.exe -Force
+          $version = node -p "require('./package.json').version"
+          if (-not $version) {
+            throw "Could not read version from package.json"
           }
-          $zip = Get-ChildItem -Path release-build -Recurse -Filter *.zip | Select-Object -First 1
-          if ($zip) {
-            Copy-Item $zip.FullName release/Meshora-1.0.0-win32-x64.zip -Force
+          "value=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Build Windows installer and ZIP
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run build:win
+
+      - name: Stage versioned packages
+        shell: pwsh
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          $version = $env:PACKAGE_VERSION
+          $exe = Get-ChildItem -Path release-build -Recurse -File -Filter "Meshora-Setup-$version.exe" | Select-Object -First 1
+          $zip = Get-ChildItem -Path release-build -Recurse -File -Filter "Meshora-Setup-$version.zip" | Select-Object -First 1
+
+          if (-not $exe) {
+            throw "Expected NSIS installer Meshora-Setup-$version.exe was not produced."
+          }
+          if (-not $zip) {
+            throw "Expected ZIP package Meshora-Setup-$version.zip was not produced."
           }
 
-      - name: Upload artifacts
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          Copy-Item $exe.FullName "release/Meshora-Setup-$version.exe" -Force
+          Copy-Item $zip.FullName "release/Meshora-Setup-$version.zip" -Force
+
+      - name: Upload Windows packages
         uses: actions/upload-artifact@v4
         with:
           name: meshora-windows
-          path: |
-            release/Meshora-Setup-1.0.0.exe
-            release-build/**
+          path: release/
+          if-no-files-found: error
+          retention-days: 14
 
-      - name: Release on tag
-        if: startsWith(github.ref, 'refs/tags/')
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Windows packages
+        uses: actions/download-artifact@v4
+        with:
+          name: meshora-windows
+          path: release
+
+      - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/Meshora-Setup-1.0.0.exe
-            release-build/*.exe
-            release-build/*.zip
+            release/*.exe
+            release/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

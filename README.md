@@ -53,27 +53,20 @@ ELECTRON_START_URL=http://localhost:5173 npx electron .
 
 ## 打包 Windows 安装包
 
-在 **Windows** 上最稳妥：
+建议在 **Windows** 上构建：
 
 ```bash
-npm run build:win:nsis
+npm run build:win
 ```
 
-产物在 `release-build/`，再复制为 `release/Meshora-Setup-1.1.0.exe`。
+产物位于 `release-build/`，文件名会自动使用 `package.json` 中的版本号，例如：
 
-也可以生成 zip：
+- `Meshora-Setup-1.1.0.exe`：NSIS 安装包
+- `Meshora-Setup-1.1.0.zip`：便携 ZIP 包
 
-```bash
-npm run build:win:zip
-```
+只需要一种格式时，也可以分别运行 `npm run build:win:nsis` 或 `npm run build:win:zip`。在 Linux 上交叉编译 NSIS 需要 Wine。
 
-在 Linux 上交叉编译 NSIS 需要 Wine。项目已包含 `.github/workflows/build-windows.yml`，推送或打 tag 后由 `windows-latest` 生成安装包。`electron-builder` 调用已带 `--publish never`，避免缺少 `GH_TOKEN` 时失败。
-
-安装包配置：
-
-- productName Meshora
-- appId com.marsbasex.meshora
-- NSIS：oneClick false，允许更改安装目录，桌面与开始菜单快捷方式
+GitHub Actions 工作流 `.github/workflows/build-windows.yml` 会在 Pull Request、推送到 `main` / `master` 或手动触发时构建 EXE 和 ZIP，并将产物作为 Actions artifact 保存 14 天。推送 `v*` 标签（例如 `v1.1.0`）时，工作流还会自动创建 GitHub Release 并附上两个版本化安装包。文件名直接读取 `package.json` 版本，避免发布文件仍显示旧版本号。
 
 ## 技术栈
 
