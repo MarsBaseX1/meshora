@@ -35,6 +35,35 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npm run build:win:nsis
 
+      - name: Verify app version is embedded in the UI
+        shell: pwsh
+        run: |
+          $package = Get-Content package.json -Raw | ConvertFrom-Json
+          $lock = Get-Content package-lock.json -Raw | ConvertFrom-Json
+          $lockRoot = $lock.packages.PSObject.Properties[''].Value
+
+          if ($package.version -ne $lock.version -or $package.version -ne $lockRoot.version) {
+            throw "Version mismatch: package.json=$($package.version), lock=$($lock.version), lock root=$($lockRoot.version)"
+          }
+
+          $html = Get-Content src/index.html -Raw
+          if ($html -match 'Meshora\s+\d+\.\d+\.\d+') {
+            throw "Do not hardcode the About version in src/index.html; read it from package.json."
+          }
+
+          $bundles = Get-ChildItem -Path dist -Recurse -File -Filter *.js
+          $embedded = $false
+          foreach ($bundle in $bundles) {
+            if ((Get-Content $bundle.FullName -Raw).Contains($package.version)) {
+              $embedded = $true
+              break
+            }
+          }
+          if (-not $embedded) {
+            throw "Built UI bundle does not contain package version $($package.version)."
+          }
+          Write-Host "Verified UI version $($package.version) in the built bundle."
+
       - name: Stage installer
         shell: pwsh
         run: |
