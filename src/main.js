@@ -84,15 +84,37 @@ async function refreshBlenderStatus() {
   updateHint();
 }
 
+function formatIcon(fmt) {
+  const shapes = {
+    cube: '<path d="M12 3 20 7.5v9L12 21 4 16.5v-9L12 3Z"/><path d="m4.5 7.8 7.5 4.4 7.5-4.4M12 12.2v8.3"/>',
+    layers: '<path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/>',
+    file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+    triangle: '<path d="m12 4 9 16H3L12 4Z"/><path d="M12 10v4m0 3h.01"/>',
+    grid: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
+    network: '<circle cx="12" cy="12" r="2.5"/><circle cx="5" cy="6" r="1.5"/><circle cx="19" cy="6" r="1.5"/><circle cx="5" cy="18" r="1.5"/><circle cx="19" cy="18" r="1.5"/><path d="m10 10-4-3m8 3 4-3m-8 7-4 3m8-3 4 3"/>'
+  };
+  let type = 'file';
+  if (fmt.id === 'c4d-fbx' || fmt.id === '3mf') type = 'layers';
+  else if (fmt.id === 'c4d-glb' || fmt.id === 'obj' || fmt.id === 'glb2') type = 'cube';
+  else if (fmt.id === 'stl' || fmt.id === 'stla') type = 'triangle';
+  else if (fmt.id === 'ply') type = 'grid';
+  else if (fmt.id === 'dae') type = 'network';
+  return `<svg class="fmt-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${shapes[type]}</svg>`;
+}
+
 function renderFormats() {
   const grid = $('formatGrid');
   grid.innerHTML = '';
   for (const fmt of EXPORT_FORMATS) {
+    const active = state.target === fmt.id;
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = `fmt${state.target === fmt.id ? ' active' : ''}${fmt.c4dInterchange ? ' c4d' : ''}`;
-    btn.textContent = fmt.label;
+    btn.className = `fmt${active ? ' active' : ''}${fmt.c4dInterchange ? ' c4d' : ''}`;
+    btn.innerHTML = `${formatIcon(fmt)}<span class="fmt-label"></span>`;
+    btn.querySelector('.fmt-label').textContent = fmt.label;
     btn.title = fmt.name;
+    btn.setAttribute('aria-label', fmt.name);
+    btn.setAttribute('aria-pressed', String(active));
     btn.addEventListener('click', () => {
       state.target = fmt.id;
       renderFormats();
@@ -125,14 +147,18 @@ function renderFiles() {
     const row = document.createElement('div');
     row.className = `file-item${file.id === state.activeId ? ' active' : ''}${file.blocked ? ' blocked' : ''}`;
     row.innerHTML = `
-      <span class="chip">${formatLabel(file.name)}</span>
+      <span class="chip"></span>
       <div class="file-meta">
         <div class="file-name"></div>
         <div class="file-sub">${formatSize(file.size)}${file.blocked ? ' · 需先转 FBX' : ''}</div>
       </div>
-      <button class="file-x" type="button" title="移除">×</button>
+      <button class="file-x" type="button" title="移除文件" aria-label="移除文件">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+      </button>
     `;
+    row.querySelector('.chip').textContent = formatLabel(file.name);
     row.querySelector('.file-name').textContent = file.name;
+    row.querySelector('.file-name').title = file.name;
     row.addEventListener('click', (e) => {
       if (e.target.closest('.file-x')) return;
       selectFile(file.id);
