@@ -1,7 +1,7 @@
 {
   "name": "meshora",
   "productName": "Meshora",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "一键转换 · 预览即所得 · C4D 互换导出",
   "author": {
     "name": "marsbasex.com",
@@ -20,7 +20,8 @@
     "build:win:nsis": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win nsis --x64 --publish never",
     "build:win:zip": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win zip --x64 --publish never",
     "build:win:dir": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --x64 --dir --publish never",
-    "pack:win": "vite build && electron-packager . Meshora --platform=win32 --arch=x64 --out=release --overwrite --icon=assets/icon.ico --app-copyright=\"Copyright © 2026 marsbasex.com\""
+    "pack:win": "vite build && electron-packager . Meshora --platform=win32 --arch=x64 --out=release --overwrite --icon=assets/icon.ico --app-copyright=\"Copyright © 2026 marsbasex.com\"",
+    "icons:generate": "node scripts/generate-icons.mjs"
   },
   "dependencies": {},
   "devDependencies": {

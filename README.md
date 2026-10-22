@@ -4,7 +4,18 @@
 
 Windows 桌面 3D 模型转换器。深色界面、实时预览、一键导出。转换不改变模型几何：不做重网格、简化或单位缩放。
 
-- 版本 1.1.0
+## 品牌图标
+
+- `assets/meshora-brand.svg` 是 Meshora 新品牌图标的矢量源文件，UI 中直接使用 SVG。
+- Windows 打包前会根据该源文件生成多尺寸 `assets/icon.ico`、应用窗口 PNG 和网页图标，保证安装程序、快捷方式和应用界面保持一致。
+- GitHub Actions 会自动安装仅用于构建的图标工具并生成资源；如需本地重新生成，执行：
+
+```bash
+npm install --no-save --package-lock=false sharp png-to-ico
+npm run icons:generate
+```
+
+- 版本 1.1.1
 - 作者 / 版权 marsbasex.com
 - Copyright © 2026 marsbasex.com
 
@@ -59,7 +70,7 @@ ELECTRON_START_URL=http://localhost:5173 npx electron .
 npm run build:win:nsis
 ```
 
-产物在 `release-build/`，再复制为 `release/Meshora-Setup-1.1.0.exe`。
+产物在 `release-build/`，再复制为 `release/Meshora-Setup-1.1.1.exe`。
 
 也可以生成 zip：
 
@@ -67,7 +78,7 @@ npm run build:win:nsis
 npm run build:win:zip
 ```
 
-在 Linux 上交叉编译 NSIS 需要 Wine。项目已包含 `.github/workflows/build-windows.yml`，推送或打 tag 后由 `windows-latest` 生成安装包。`electron-builder` 调用已带 `--publish never`，避免缺少 `GH_TOKEN` 时失败。
+在 Linux 上交叉编译 NSIS 需要 Wine。项目已包含 `.github/workflows/build-windows.yml`：PR 会验证 Windows 安装包；合并到 `main` / `master` 后会再次构建，并在当前 `package.json` 版本号尚无对应 `vX.Y.Z` 标签时自动创建 GitHub Release、上传安装包与 ZIP。版本标签已存在时不会重复发布。`electron-builder` 调用已带 `--publish never`，避免缺少 `GH_TOKEN` 时失败。
 
 安装包配置：
 
