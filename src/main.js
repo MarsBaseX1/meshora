@@ -1,3 +1,4 @@
+import packageJson from '../package.json';
 import { Viewport } from './viewport.js';
 import { importScene, exportAssimp } from './converter.js';
 import { exportById } from './exporters.js';
@@ -15,6 +16,7 @@ import {
 
 const api = window.meshora;
 const $ = (id) => document.getElementById(id);
+$('aboutTitle').textContent = `Meshora ${packageJson.version}`;
 
 const state = {
   files: [], // { id, name, size, data, path?, companions: [], kind? }
