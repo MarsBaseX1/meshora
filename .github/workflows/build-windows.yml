@@ -57,15 +57,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: meshora-windows
-          path: |
-            release/*
-            release-build/**
+          path: release/*
 
       - name: Release on tag
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release/Meshora-Setup-*.exe
-            release-build/*.exe
-            release-build/*.zip
+            release/*
