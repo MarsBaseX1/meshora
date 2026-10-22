@@ -1,93 +1,173 @@
-# Meshora
+<div align="center">
+  <img src="assets/meshora-brand.svg" width="88" alt="Meshora brand mark" />
+  <h1>Meshora</h1>
+  <p><strong>一键转换 · 预览即所得</strong></p>
+  <p>一款专注于 3D 模型格式互通的 Windows 桌面工具。拖入模型、实时预览、检查网格信息，再导出为常见格式。</p>
+  <p>
+    <a href="https://github.com/MarsBaseX1/meshora/releases/latest"><img src="https://img.shields.io/github/v/release/MarsBaseX1/meshora?style=flat-square&label=latest%20release" alt="Latest release" /></a>
+    <a href="https://github.com/MarsBaseX1/meshora/releases"><img src="https://img.shields.io/github/downloads/MarsBaseX1/meshora/total?style=flat-square&label=downloads" alt="GitHub downloads" /></a>
+    <a href="https://github.com/MarsBaseX1/meshora"><img src="https://img.shields.io/github/stars/MarsBaseX1/meshora?style=flat-square" alt="GitHub stars" /></a>
+    <a href="https://github.com/MarsBaseX1/meshora"><img src="https://img.shields.io/github/forks/MarsBaseX1/meshora?style=flat-square" alt="GitHub forks" /></a>
+    <a href="https://github.com/MarsBaseX1/meshora/actions/workflows/build-windows.yml"><img src="https://github.com/MarsBaseX1/meshora/actions/workflows/build-windows.yml/badge.svg?branch=main" alt="Windows build" /></a>
+    <img src="https://img.shields.io/badge/platform-Windows%20x64-3B82F6?style=flat-square" alt="Windows x64" />
+  </p>
+  <p>
+    <a href="https://github.com/MarsBaseX1/meshora/releases/latest"><strong>下载最新版本</strong></a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/MarsBaseX1/meshora/releases">所有版本</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/MarsBaseX1/meshora/issues">反馈问题</a>
+  </p>
+  <img src="assets/readme-hero.svg" width="100%" alt="Meshora 的 3D 网格与常见模型格式转换视觉示意图" />
+</div>
 
-一键转换 · 预览即所得
+---
 
-Windows 桌面 3D 模型转换器。深色界面、实时预览、一键导出。转换不改变模型几何：不做重网格、简化或单位缩放。
+## Meshora 是什么？
 
-## 品牌图标
+Meshora 帮你把分散在不同 3D 工具和文件格式之间的模型工作流，整理成一个简单的桌面流程：**导入 → 预览 → 检查 → 导出**。
 
-- `assets/meshora-brand.svg` 是 Meshora 新品牌图标的矢量源文件，UI 中直接使用 SVG。
-- Windows 打包前会根据该源文件生成多尺寸 `assets/icon.ico`、应用窗口 PNG 和网页图标，保证安装程序、快捷方式和应用界面保持一致。
-- GitHub Actions 会自动安装仅用于构建的图标工具并生成资源；如需本地重新生成，执行：
+它适合需要快速查看模型、确认基础网格信息、在常见格式之间传递资产的设计师、开发者和 3D 内容创作者。Meshora 专注于格式转换与预览，不试图替代 Blender、Cinema 4D 或专业网格编辑软件。
 
-```bash
-npm install --no-save --package-lock=false sharp png-to-ico
-npm run icons:generate
-```
+## 核心工作流
 
-- 版本 1.1.1
-- 作者 / 版权 marsbasex.com
-- Copyright © 2026 marsbasex.com
+<table>
+  <tbody>
+    <tr>
+      <td width="56%" valign="middle">
+        <img src="assets/readme-workflow.svg" width="100%" alt="导入模型、实时预览、选择格式导出的工作流图" />
+      </td>
+      <td width="44%" valign="middle">
+        <h3>01 · 导入、预览、导出</h3>
+        <p>将一个或多个模型拖入窗口，直接在 3D 视口中检查，再选择目标格式导出。</p>
+        <ul>
+          <li>实时旋转、平移、缩放与适应视图</li>
+          <li>网格、线框和自动旋转视图选项</li>
+          <li>查看文件格式、顶点、面、文件大小与材质等信息</li>
+          <li>支持多文件选择与批量导出</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td width="44%" valign="middle">
+        <h3>02 · 专注几何数据互通</h3>
+        <p>Meshora 默认不进行重网格、网格简化或单位缩放，帮助你在格式转换时减少不必要的几何处理。</p>
+        <ul>
+          <li>适合快速转换与资产交接</li>
+          <li>可选用本机 Blender 作为额外格式桥接</li>
+          <li>转换细节与格式限制在下方明确列出</li>
+        </ul>
+      </td>
+      <td width="56%" valign="middle">
+        <img src="assets/readme-mesh.svg" width="100%" alt="强调网格数据转换原则的 3D 线框示意图" />
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-## 功能
+## 主要功能
 
-- 拖放或文件选择器打开一个或多个模型
-- three.js 实时预览：旋转、平移、缩放、适应视图、网格、线框、自动旋转
-- 显示文件名、格式、顶点、面、体积大小、材质
-- 选择目标格式后一键导出，或「导出到…」
-- 多文件批量导出
-- **Blender 桥接**：可选本机 Blender CLI，用于预览 `.blend`，以及导出 Cinema 4D 可用的 FBX
-- **C4D 互换导出**：`C4D · FBX` / `C4D · GLB` 写出真实的 `.fbx` / `.glb`（不是原生 `.c4d` 工程）
+<table>
+  <tbody>
+    <tr>
+      <td width="50%" valign="top">
+        <h3>实时 3D 预览</h3>
+        <p>使用 three.js 显示导入后的场景，可旋转、平移、缩放、适应视图，并切换网格、线框与自动旋转。</p>
+      </td>
+      <td width="50%" valign="top">
+        <h3>批量文件工作流</h3>
+        <p>一次拖入或选择多个模型，快速浏览文件信息，并将选中的场景批量导出到目标格式。</p>
+      </td>
+    </tr>
+    <tr>
+      <td width="50%" valign="top">
+        <h3>Blender 桥接</h3>
+        <p>可选连接本机 Blender CLI，用于预览 <code>.blend</code> 文件，以及将模型转换为 Cinema 4D 可用的 FBX。</p>
+      </td>
+      <td width="50%" valign="top">
+        <h3>Cinema 4D 互换导出</h3>
+        <p>提供 <code>C4D · GLB</code> 与 <code>C4D · FBX</code> 互换文件选项，便于将模型交给 Cinema 4D 继续处理。</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-## 导入 / 导出
+## 格式支持
 
-导入（assimpjs，常见格式）：OBJ、FBX、GLTF、GLB、STL、PLY、DAE、3DS、3MF、OFF、X，以及 assimpjs 能识别的其它格式。USDZ 若当前 WASM 未编译该读取器则会失败。
+| 工作流 | 格式 | 说明 |
+| --- | --- | --- |
+| 常见导入 | OBJ、FBX、GLTF、GLB、STL、PLY、DAE、3DS、3MF、OFF、X | 也包含其他由当前 Assimp/WASM 读取器支持的格式 |
+| 常见导出 | GLB、GLTF、OBJ、STL、PLY、DAE、3MF | GLB / GLTF 使用 glTF 2.0 导出；STL 支持二进制与文本形式 |
+| Cinema 4D 互换 | GLB、FBX | 输出的是 Cinema 4D 可打开的互换文件，不是原生 `.c4d` 工程 |
+| 可选外部桥接 | BLEND、FBX | 需要在本机安装并配置 Blender；FBX 导出依赖 Blender |
 
-- **BLEND**：需安装 Blender，并在「设置」中确认已找到。通过 `blender -b … -P scripts/blender_export.py` 转为 GLB 预览。
-- **MAX**：无法在无 3ds Max 的环境下直接解析。请先在 3ds Max 导出为 FBX，再导入；界面会明确提示。
+### 转换行为与限制
 
-导出：
+- **不做重网格、简化或单位缩放。** 但导入器会在导入阶段三角化多边形，并可能合并重合顶点；这属于底层 Assimp/WASM 读取流程。
+- STL 与 3MF 需要三角面，Meshora 会按导入后的场景数据导出。
+- `.blend` 需要安装 Blender，并在「设置」中确认程序路径。
+- `.max` 无法在没有 3ds Max 的情况下直接解析。请先在 3ds Max 中导出为 FBX，再导入 Meshora。
+- USD / USDZ 等格式的实际读取能力取决于当前 WASM 构建包含的读取器；若读取器未编译，文件可能无法导入。
+- Cinema 4D 导出只提供 GLB / FBX 互换格式，**不会生成原生 `.c4d` 工程文件**。
 
-- **C4D · FBX / C4D · GLB**：Cinema 4D 可打开的互换文件（`.fbx` / `.glb`），**不是**原生 `.c4d` Melange 工程。FBX 路径依赖 Blender（任意来源先到 GLB，再由 Blender 导出 FBX；`.blend` 可直接导出 FBX）。
-- **GLB / GLTF**：assimpjs 原生写出
-- **OBJ / STL / PLY / DAE / 3MF**：按导入后的场景原样写出顶点与面（不重网格）
+## 快速开始
 
-assimpjs 在导入时会三角化多边形并合并重合顶点（写入 WASM，无法关闭）。顶点坐标不会被缩放或重网格。STL / 3MF 需要三角面，界面会提示。
+### 方式一：下载 Windows 安装包
 
-## 本地运行
+1. 打开 [GitHub Releases](https://github.com/MarsBaseX1/meshora/releases/latest)。
+2. 下载最新的 `Meshora-Setup-*.exe` 并运行安装程序。
+3. 启动 Meshora，将模型拖入窗口，选择目标格式后导出。
 
-需要 Node.js 20+。可选：安装 [Blender](https://www.blender.org) 以支持 `.blend` 与 C4D·FBX。
+如果需要 `.blend` 预览或 FBX 桥接，请另外安装 [Blender](https://www.blender.org/)。
+
+### 方式二：从源码运行
+
+需要 **Node.js 20+**。
 
 ```bash
 npm install
 npm run start
 ```
 
-开发时分别启动渲染进程与 Electron：
+开发模式下先启动 Vite：
 
 ```bash
 npm run dev
-ELECTRON_START_URL=http://localhost:5173 npx electron .
 ```
 
-示例模型：`samples/cube.obj`
+然后在另一个终端启动 Electron（Windows PowerShell）：
 
-## 打包 Windows 安装包
+```powershell
+$env:ELECTRON_START_URL="http://localhost:5173"
+npx electron .
+```
 
-在 **Windows** 上最稳妥：
+### 构建 Windows 安装包
+
+在 Windows 环境中执行：
 
 ```bash
 npm run build:win:nsis
 ```
 
-产物在 `release-build/`，再复制为 `release/Meshora-Setup-1.1.1.exe`。
-
-也可以生成 zip：
-
-```bash
-npm run build:win:zip
-```
-
-在 Linux 上交叉编译 NSIS 需要 Wine。项目已包含 `.github/workflows/build-windows.yml`：PR 会验证 Windows 安装包；合并到 `main` / `master` 后会再次构建，并在当前 `package.json` 版本号尚无对应 `vX.Y.Z` 标签时自动创建 GitHub Release、上传安装包与 ZIP。版本标签已存在时不会重复发布。`electron-builder` 调用已带 `--publish never`，避免缺少 `GH_TOKEN` 时失败。
-
-安装包配置：
-
-- productName Meshora
-- appId com.marsbasex.meshora
-- NSIS：oneClick false，允许更改安装目录，桌面与开始菜单快捷方式
+构建产物位于 `release-build/`。项目的 GitHub Actions 会在 Pull Request 中验证 Windows 安装包，并在版本提交合并到 `main` 后自动构建、发布对应版本的 GitHub Release。
 
 ## 技术栈
 
-Electron · Vite · three.js · assimpjs ·（可选）Blender CLI
+- **桌面应用：** Electron
+- **构建工具：** Vite
+- **3D 视口：** three.js
+- **格式读取与转换：** assimpjs / WebAssembly
+- **可选格式桥接：** Blender CLI
 
-几何预览：先在内存中转为 GLB，再用 GLTFLoader 载入。STL / OBJ / PLY 在转换失败时走 three.js 备用加载器。`.blend` 经 Blender 导出 GLB 后同样预览。
+## 反馈与参与
+
+遇到无法导入的模型、转换异常或有功能建议？欢迎通过 [GitHub Issues](https://github.com/MarsBaseX1/meshora/issues) 提交问题，并尽可能附上源文件格式、目标格式与复现步骤。
+
+---
+
+<div align="center">
+  <sub>Meshora · 一键转换，预览即所得</sub>
+  <br />
+  <sub>Copyright © 2026 marsbasex.com</sub>
+</div>
