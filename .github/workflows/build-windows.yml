@@ -221,7 +221,7 @@ jobs:
             $status = "**Release status:** The Windows installer for Meshora $env:APP_VERSION has been signed by SignPath, and the release workflow verified its Authenticode signature as valid. Each signing request is subject to manual approval."
             $attribution = "> Free code signing provided by SignPath.io, certificate by SignPath Foundation."
           } else {
-            $status = "**Release status:** The Windows installer for Meshora $env:APP_VERSION is **unsigned**. SignPath Foundation signing is not active for this release; do not interpret the attribution below as evidence that this installer is signed."
+            $status = "**Release status:** The Windows installer for Meshora $env:APP_VERSION is **unsigned**. The SignPath Foundation application has been submitted and is awaiting review; acceptance and signing activation are not yet confirmed. Do not interpret the attribution below as evidence that this installer is signed."
             $attribution = "**Attribution for releases that are actually signed only:**`n> Free code signing provided by SignPath.io, certificate by SignPath Foundation."
           }
 
