@@ -78,7 +78,7 @@ npm run build:win:nsis
 npm run build:win:zip
 ```
 
-在 Linux 上交叉编译 NSIS 需要 Wine。项目已包含 `.github/workflows/build-windows.yml`，推送或打 tag 后由 `windows-latest` 生成安装包。`electron-builder` 调用已带 `--publish never`，避免缺少 `GH_TOKEN` 时失败。
+在 Linux 上交叉编译 NSIS 需要 Wine。项目已包含 `.github/workflows/build-windows.yml`：PR 会验证 Windows 安装包；合并到 `main` / `master` 后会再次构建，并在当前 `package.json` 版本号尚无对应 `vX.Y.Z` 标签时自动创建 GitHub Release、上传安装包与 ZIP。版本标签已存在时不会重复发布。`electron-builder` 调用已带 `--publish never`，避免缺少 `GH_TOKEN` 时失败。
 
 安装包配置：
 
