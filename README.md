@@ -4,6 +4,17 @@
 
 Windows 桌面 3D 模型转换器。深色界面、实时预览、一键导出。转换不改变模型几何：不做重网格、简化或单位缩放。
 
+## 品牌图标
+
+- `assets/meshora-brand.svg` 是 Meshora 新品牌图标的矢量源文件，UI 中直接使用 SVG。
+- Windows 打包前会根据该源文件生成多尺寸 `assets/icon.ico`、应用窗口 PNG 和网页图标，保证安装程序、快捷方式和应用界面保持一致。
+- GitHub Actions 会自动安装仅用于构建的图标工具并生成资源；如需本地重新生成，执行：
+
+```bash
+npm install --no-save --package-lock=false sharp png-to-ico
+npm run icons:generate
+```
+
 - 版本 1.1.0
 - 作者 / 版权 marsbasex.com
 - Copyright © 2026 marsbasex.com
