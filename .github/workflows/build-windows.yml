@@ -16,6 +16,200 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps || npm install
+
+      - name: Install icon generation tools
+        run: npm install --no-save --package-lock=false --legacy-peer-deps sharp png-to-ico
+
+      - name: Generate Meshora brand icons
+        run: npm run icons:generate
+
+      - name: Build NSIS installer
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run build:win:nsis
+
+      - name: Verify app version is embedded in the UI
+        shell: pwsh
+        run: |
+          $package = Get-Content package.json -Raw | ConvertFrom-Json -AsHashtable
+          $lock = Get-Content package-lock.json -Raw | ConvertFrom-Json -AsHashtable
+          $lockRoot = $lock['packages']['']
+
+          if ($package['version'] -ne $lock['version'] -or $package['version'] -ne $lockRoot['version']) {
+            throw "Version mismatch: package.json=$($package['version']), lock=$($lock['version']), lock root=$($lockRoot['version'])"
+          }
+
+          $html = Get-Content src/index.html -Raw
+          if ($html -match 'Meshora\s+\d+\.\d+\.\d+') {
+            throw "Do not hardcode the About version in src/index.html; read it from package.json."
+          }
+
+          if ($package.build.win.signAndEditExecutable -ne $true) {
+            throw "Windows executable resource editing must be enabled so the custom Meshora icon is embedded."
+          }
+
+          $iconPath = "assets/icon.ico"
+          if (-not (Test-Path $iconPath)) {
+            throw "Generated Windows icon is missing: $iconPath"
+          }
+          $icon = [System.IO.File]::ReadAllBytes($iconPath)
+          if ($icon.Length -lt 1024 -or $icon[0] -ne 0 -or $icon[1] -ne 0 -or $icon[2] -ne 1 -or $icon[3] -ne 0) {
+            throw "Generated Windows icon is invalid or unexpectedly small."
+          }
+
+          $bundles = Get-ChildItem -Path dist -Recurse -File -Filter *.js
+          $embedded = $false
+          foreach ($bundle in $bundles) {
+            if ((Get-Content $bundle.FullName -Raw).Contains($package.version)) {
+              $embedded = $true
+              break
+            }
+          }
+          if (-not $embedded) {
+            throw "Built UI bundle does not contain package version $($package.version)."
+          }
+          Write-Host "Verified UI version $($package.version) in the built bundle."
+
+      - name: Stage installer
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+
+          $exe = Get-ChildItem -Path release-build -Recurse -Filter *.exe | Select-Object -First 1
+          if (-not $exe) {
+            throw "Windows installer was not produced."
+          }
+          Copy-Item $exe.FullName "release/Meshora-Setup-$version.exe" -Force
+
+          $zip = Get-ChildItem -Path release-build -Recurse -Filter *.zip | Select-Object -First 1
+          if ($zip) {
+            Copy-Item $zip.FullName "release/Meshora-$version-win32-x64.zip" -Force
+          }
+
+      - name: Read release version
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=v$version" >> $env:GITHUB_OUTPUT
+
+      - name: Check whether version tag already exists
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        id: tag
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $tag = "v$version"
+          $remoteTag = git ls-remote --tags origin "refs/tags/$tag"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Unable to check whether release tag $tag exists."
+          }
+          if ($remoteTag) {
+            "exists=true" >> $env:GITHUB_OUTPUT
+            Write-Host "Release tag $tag already exists; skipping release creation."
+          } else {
+            "exists=false" >> $env:GITHUB_OUTPUT
+            Write-Host "Release tag $tag is missing; this main-branch build can publish it."
+          }
+
+      - name: Check SignPath configuration
+        id: signpath-config
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && steps.tag.outputs.exists == 'false'
+        shell: pwsh
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          SIGNPATH_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+        run: |
+          $required = @(
+            'SIGNPATH_API_TOKEN',
+            'SIGNPATH_ORGANIZATION_ID',
+            'SIGNPATH_PROJECT_SLUG',
+            'SIGNPATH_SIGNING_POLICY_SLUG',
+            'SIGNPATH_ARTIFACT_CONFIGURATION_SLUG'
+          )
+          $missing = @($required | Where-Object {
+            [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($_))
+          })
+
+          if ($missing.Count -eq 0) {
+            "enabled=true" >> $env:GITHUB_OUTPUT
+            Write-Host "SignPath is configured. The release will wait for an approved signing request."
+          } else {
+            "enabled=false" >> $env:GITHUB_OUTPUT
+            Write-Warning ("SignPath is not fully configured; this release will remain unsigned. Missing settings: " + ($missing -join ', '))
+          }
+
+      - name: Upload unsigned installer for SignPath
+        id: upload-signpath-installer
+        if: steps.signpath-config.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: meshora-installer-unsigned-${{ steps.version.outputs.version }}
+          path: release/Meshora-Setup-${{ steps.version.outputs.version }}.exe
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Submit Windows installer to SignPath
+        id: signpath
+        if: steps.signpath-config.outputs.enabled == 'true'
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.upload-signpath-installer.outputs.artifact-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signed-installer
+          skip-decompress: true
+
+      - name: Verify and stage signed installer
+        if: steps.signpath-config.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $signed = Get-ChildItem -Path signed-installer -File -Filter *.exe | Select-Object -First 1
+          if (-not $signed) {
+            throw "SignPath completed without returning a signed EXE installer."
+          }
+
+          $signature = Get-AuthenticodeSignature $signed.FullName
+          if ($signature.Status -ne 'Valid') {
+            throw "The SignPath output does not have a valid Authenticode signature: $($signature.Status) $($signature.StatusMessage)"
+          }
+
+          $destination = "release/Meshora-Setup-$env:APP_VERSION.exe"
+          Copy-Item $signed.FullName $destination -Force
+          Write-Host "Verified signed installer: $destination"
+          Write-Host "Signer: $($signature.SignerCertificate.Subject)"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: meshora-windows
+          path: release/*
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Prepare release notes
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && steps.tag.outputs.exists == 'false'
         shell: pwsh
