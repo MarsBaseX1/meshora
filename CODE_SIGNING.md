@@ -28,11 +28,11 @@ If SignPath configuration is missing, the release workflow can publish an unsign
 
 ## Maintainer roles
 
-- **Authors and committers:** the repository owner and maintainers with write access to [MarsBaseX1/meshora](https://github.com/MarsBaseX1/meshora).
-- **Reviewers:** project maintainers reviewing pull requests before changes are merged. Changes to release workflows and signing configuration receive particular scrutiny.
-- **Signing approvers:** the repository owner or designated release maintainers who are granted approver permissions in SignPath. Each release signing request must be manually reviewed and approved before the signed installer is published.
+- **Authors and committers:** `MarsBaseX1` (repository owner) and any additional maintainers with write access to [MarsBaseX1/meshora](https://github.com/MarsBaseX1/meshora).
+- **Reviewers:** `MarsBaseX1` and designated maintainers who review pull requests before changes are merged. Release-workflow and signing-configuration changes receive particular scrutiny.
+- **Signing approver:** `MarsBaseX1` is the intended release approver and must be granted the corresponding approver role in SignPath before signing is activated. Each release signing request must be manually reviewed and approved before the signed installer is published.
 
-Role assignments in GitHub and SignPath must be kept in sync. Maintainers must use multi-factor authentication for GitHub and SignPath access.
+The role names above describe the intended project structure; the SignPath account, approver permission, and any additional reviewer assignments must be configured during onboarding. Role assignments in GitHub and SignPath must be kept in sync. Maintainers must use multi-factor authentication for GitHub and SignPath access.
 
 ## Privacy
 
