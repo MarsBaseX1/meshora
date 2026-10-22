@@ -67,7 +67,7 @@
     "compression": "maximum",
     "win": {
       "icon": "assets/icon.ico",
-      "signAndEditExecutable": false,
+      "signAndEditExecutable": true,
       "target": [
         {
           "target": "nsis",
