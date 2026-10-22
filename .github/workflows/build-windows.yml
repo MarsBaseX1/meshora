@@ -38,12 +38,12 @@ jobs:
       - name: Verify app version is embedded in the UI
         shell: pwsh
         run: |
-          $package = Get-Content package.json -Raw | ConvertFrom-Json
-          $lock = Get-Content package-lock.json -Raw | ConvertFrom-Json
-          $lockRoot = $lock.packages.PSObject.Properties[''].Value
+          $package = Get-Content package.json -Raw | ConvertFrom-Json -AsHashtable
+          $lock = Get-Content package-lock.json -Raw | ConvertFrom-Json -AsHashtable
+          $lockRoot = $lock['packages']['']
 
-          if ($package.version -ne $lock.version -or $package.version -ne $lockRoot.version) {
-            throw "Version mismatch: package.json=$($package.version), lock=$($lock.version), lock root=$($lockRoot.version)"
+          if ($package['version'] -ne $lock['version'] -or $package['version'] -ne $lockRoot['version']) {
+            throw "Version mismatch: package.json=$($package['version']), lock=$($lock['version']), lock root=$($lockRoot['version'])"
           }
 
           $html = Get-Content src/index.html -Raw
